@@ -1,97 +1,144 @@
-# TalentLink AI
+# TalentLink AI — AI-Powered Recruitment Workspace
 
 ## Overview
 
-TalentLink AI is an AI-powered recruitment platform that helps recruiters upload resumes, search candidates using natural language queries, analyze hiring insights, and manage talent efficiently.
+TalentLink AI is an AI-powered recruitment workspace designed to streamline candidate discovery, resume parsing, recruiter analytics, and talent management.
 
-The platform provides intelligent candidate discovery, AI-powered match insights, analytics dashboards, and resume management in a modern recruiter-focused interface.
-    
+The platform enables recruiters to:
+
+- Upload and parse resumes using AI
+- Search candidates using natural language queries
+- Analyze talent insights and hiring trends
+- Manage talent pools efficiently
+- Evaluate candidate profile relevance using intelligent scoring
+
 ---
 
-# Features
+# Key Features
 
-- AI-powered smart candidate search
-- Resume upload and parsing
-- Talent pool management
-- Candidate filtering and match scoring
-- AI match insights
-- Analytics dashboard
+## AI Smart Search
+- Natural language candidate search
+- AI-powered query parsing
+- Skill-based candidate recommendations
+- Match insights and profile alignment
+
+## Talent Pool Management
+- Infinite scrolling candidate grid
+- Skill filtering
+- Experience filtering
+- Domain-based filtering
+- Dynamic profile scoring
+- Candidate profile modal
+
+## Resume Intelligence
+- Resume upload with drag-and-drop
+- AI-powered resume parsing
+- Automatic skill extraction
+- Candidate profile generation
+
+## Insights Dashboard
+- Talent analytics
+- Skill distribution charts
+- Experience breakdown
+- Domain expertise analysis
+- Hiring trend insights
+
+## Authentication
+- JWT-based authentication
+- Protected routes
+- Secure API access
+
+## User Experience
+- Fully responsive UI
 - Dark mode support
-- Responsive UI
-- JWT authentication
+- Modern recruiter-focused design
+- Optimized recruiter workflow
 
 ---
 
 # Tech Stack
 
 ## Frontend
-
 - React.js
-- Tailwind CSS
-- Recharts
-- Lucide React
 - Vite
+- Tailwind CSS
+- Lucide React
+- Recharts
 
 ## Backend
-
 - Node.js
 - Express.js
 - MongoDB
 - Mongoose
-- Gemini AI API
+
+## AI Integration
+- Google Gemini API
 
 ## Authentication
-
 - JWT Authentication
 
 ---
 
-# Project Structure
-
-## Frontend
+# Monorepo Structure
 
 ```bash
-src/
+AI-Powered-CMIT/
 │
-├── components/
-├── constants/
-├── hooks/
-├── pages/
-├── services/
-├── utils/
-├── assets/
-└── App.jsx
-```
-
-## Backend
-
-```bash
-backend/
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
 │
-├── controllers/
-├── middleware/
-├── models/
-├── routes/
-├── uploads/
-├── utils/
-└── server.js
+├── backend/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── uploads/
+│   ├── utils/
+│   ├── package.json
+│   └── server.js
+│
+├── README.md
+└── .gitignore
 ```
 
 ---
 
 # Complete Installation Guide
 
-## Step 1: Clone Repository
+## Prerequisites
+
+Before running the project, ensure the following are installed:
+
+- Node.js (Recommended: v20 LTS)
+- npm
+- MongoDB Atlas Account
+- Google Gemini API Key
+- Git
+
+---
+
+# Step 1 — Clone Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/evolve-hack-2026/AI-Powered-CMIT.git
+```
+
+---
+
+# Step 2 — Navigate to Project Folder
+
+```bash
+cd AI-Powered-CMIT
 ```
 
 ---
 
 # Frontend Setup
 
-## Step 2: Navigate to Frontend Folder
+## Step 3 — Navigate to Frontend Folder
 
 ```bash
 cd frontend
@@ -99,7 +146,7 @@ cd frontend
 
 ---
 
-## Step 3: Install Frontend Dependencies
+## Step 4 — Install Frontend Dependencies
 
 ```bash
 npm install
@@ -107,11 +154,9 @@ npm install
 
 ---
 
-## Step 4: Create Frontend Environment File
+## Step 5 — Create Frontend Environment File
 
-Create a `.env` file inside the frontend root folder.
-
-Add the following:
+Create a `.env` file inside the `frontend` folder.
 
 ```env
 VITE_API_URL=http://localhost:5000
@@ -119,13 +164,13 @@ VITE_API_URL=http://localhost:5000
 
 ---
 
-## Step 5: Start Frontend Server
+## Step 6 — Start Frontend Development Server
 
 ```bash
 npm run dev
 ```
 
-Frontend will run on:
+Frontend runs on:
 
 ```bash
 http://localhost:5173
@@ -135,7 +180,9 @@ http://localhost:5173
 
 # Backend Setup
 
-## Step 6: Navigate to Backend Folder
+## Step 7 — Open New Terminal
+
+Navigate to backend folder:
 
 ```bash
 cd backend
@@ -143,7 +190,7 @@ cd backend
 
 ---
 
-## Step 7: Install Backend Dependencies
+## Step 8 — Install Backend Dependencies
 
 ```bash
 npm install
@@ -151,11 +198,9 @@ npm install
 
 ---
 
-## Step 8: Create Backend Environment File
+## Step 9 — Create Backend Environment File
 
-Create a `.env` file inside the backend root folder.
-
-Add the following:
+Create a `.env` file inside the `backend` folder.
 
 ```env
 MONGO_URI=your_mongodb_connection_string
@@ -169,13 +214,13 @@ GEMINI_API_KEY=your_gemini_api_key
 
 ---
 
-## Step 9: Start Backend Server
+## Step 10 — Start Backend Server
 
 ```bash
 npm run dev
 ```
 
-Backend will run on:
+Backend runs on:
 
 ```bash
 http://localhost:5000
@@ -203,44 +248,38 @@ npm run dev
 
 ---
 
-# Available Modules
+# Core Modules
 
 ## Home Dashboard
-
-- AI-powered candidate search
-- AI match insights
-- Quick recruiter actions
+- AI recruiter workspace
+- Smart candidate discovery
 - Recently added talent
+- AI search interface
 
 ---
 
 ## Talent Pool
-
-- Candidate listing
-- Skill-based filtering
-- Experience filtering
-- Domain filtering
-- Candidate match scoring
-- Candidate profile modal
-
----
-
-## Insights Dashboard
-
-- Talent analytics
-- Skill distribution charts
-- Experience breakdown
-- AI hiring insights
-- Expertise analysis
+- Candidate exploration
+- Dynamic filters
+- Skill-based matching
+- Profile insights
+- Infinite scroll loading
 
 ---
 
 ## Resume Upload
+- Resume upload system
+- AI parsing support
+- Manual candidate entry
+- Source identification (AI Parsed / Manual Entry)
 
-- PDF resume upload
-- Drag and drop support
-- Resume parsing
-- AI-powered extraction
+---
+
+## Insights Dashboard
+- Skill distribution analytics
+- Hiring domain analysis
+- Experience visualization
+- Recruiter insights
 
 ---
 
@@ -251,6 +290,8 @@ npm run dev
 ```env
 VITE_API_URL=http://localhost:5000
 ```
+
+---
 
 ## Backend
 
@@ -268,37 +309,43 @@ GEMINI_API_KEY=your_gemini_api_key
 
 # Screenshots
 
-Add screenshots for:
+Recommended screenshots:
 
 - Home Dashboard
-- AI Smart Search
+- Smart AI Search
 - Talent Pool
-- Insights Dashboard
+- Candidate Modal
 - Resume Upload
+- Insights Dashboard
 
-Example folder structure:
+Example:
 
 ```bash
 screenshots/
 ├── home.png
+├── smart-search.png
 ├── talent-pool.png
-├── insights.png
-└── upload.png
+├── upload.png
+└── insights.png
 ```
 
 ---
 
 # Future Enhancements
 
-- Resume ranking system
-- Advanced AI recommendations
-- Recruiter collaboration
+- Resume ranking engine
+- AI recommendation optimization
+- Recruiter collaboration tools
 - Email integration
-- Role-based access
 - Candidate bookmarking
+- Role-based access management
+- Advanced semantic search
 
 ---
 
-# Author
+# Contributors
 
-Developed by Mohammad Mohiddin, Mehak Dua.
+Developed by:
+
+- Mohammad Mohiddin
+- Mehak Dua
