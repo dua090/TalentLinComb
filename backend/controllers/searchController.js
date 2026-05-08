@@ -1,5 +1,3 @@
-// controllers/searchController.js
-
 const Candidate = require("../models/Candidate");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -54,11 +52,6 @@ Return:
 
     let text =
       result.response.text();
-
-    // =========================
-    // SAFE JSON EXTRACTION
-    // =========================
-
     const match =
       text.match(/\{[\s\S]*\}/);
 
@@ -118,9 +111,7 @@ Return:
         query
       );
 
-    // =========================
     // DOMAIN SKILLS
-    // =========================
 
     const frontendSkills = [
       "React",
@@ -205,9 +196,7 @@ Return:
       "AI",
     ];
 
-    // =========================
     // SMART MATCH SCORING
-    // =========================
 
     const scoredCandidates =
       candidates.map(
@@ -215,9 +204,7 @@ Return:
 
           let totalScore = 0;
 
-          // =========================
           // SKILL SCORE (50%)
-          // =========================
 
           let skillScore = 0;
 
@@ -247,9 +234,7 @@ Return:
               parsed.skills.length;
           }
 
-          // =========================
           // EXPERIENCE SCORE (20%)
-          // =========================
 
           let experienceScore =
             1;
@@ -296,9 +281,7 @@ Return:
             }
           }
 
-          // =========================
           // DOMAIN SCORE (15%)
-          // =========================
 
           let domainScore =
             0.5;
@@ -388,9 +371,7 @@ Return:
             domainScore = 1;
           }
 
-          // =========================
           // PROJECT SCORE (15%)
-          // =========================
 
           let projectScore =
             0.5;
@@ -424,9 +405,7 @@ Return:
             }
           }
 
-          // =========================
           // FINAL WEIGHTED SCORE
-          // =========================
 
           totalScore =
             (
@@ -445,9 +424,7 @@ Return:
               totalScore
             );
 
-          // =========================
           // REALISTIC SCORE CAPS
-          // =========================
 
           if (
             matchPercentage > 95
@@ -474,9 +451,7 @@ Return:
         }
       );
 
-    // =========================
     // SORT BEST → WORST
-    // =========================
 
     scoredCandidates.sort(
       (a, b) =>
@@ -484,9 +459,7 @@ Return:
         a.matchPercentage
     );
 
-    // =========================
     // FINAL RESPONSE
-    // =========================
 
     res.json({
 

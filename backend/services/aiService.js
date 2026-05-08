@@ -2,7 +2,6 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// 🔥 REGEX FALLBACK PARSER
 const fallbackParser = (text) => {
   // Ensure text is a string; if it's null/undefined, use an empty string
   const cleanText = String(text || ""); 
@@ -61,7 +60,6 @@ exports.parseResumeWithAI = async (text) => {
     return fallbackParser(text);
   }
 };
-// const OpenAI = require("openai");
 
 // const client = new OpenAI({
 //   apiKey: process.env.OPENAI_API_KEY

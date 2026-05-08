@@ -5,7 +5,7 @@ const mammoth = require("mammoth");
 const Candidate = require("../models/Candidate");
 const { parseResumeWithAI } = require("../services/aiService");
 
-// 🔥 Extract text from file
+// Extract text from file
 const extractText = async (filePath, mimetype) => {
   if (mimetype === "application/pdf") {
     const dataBuffer = fs.readFileSync(filePath);
@@ -24,7 +24,7 @@ const extractText = async (filePath, mimetype) => {
   return "";
 };
 
-// 🔥 Regex fallback parser (important)
+//Regex fallback parser (important)
 const fallbackParser = (text) => {
   const email = text.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i);
   const phone = text.match(/\b\d{10}\b/);
@@ -40,10 +40,10 @@ const fallbackParser = (text) => {
   };
 };
 
-// 🔥 MAIN CONTROLLER
+//MAIN CONTROLLER
 exports.uploadResume = async (req, res) => {
   try {
-    // 🔥 Check file
+    //Check file
     if (!req.file) {
       return res.status(400).json({
         msg: "No file uploaded",
@@ -52,7 +52,7 @@ exports.uploadResume = async (req, res) => {
 
     const filePath = req.file.path;
 
-    // 🔥 Extract text from resume
+    //Extract text from resume
     const text = await extractText(
       filePath,
       req.file.mimetype
@@ -64,7 +64,7 @@ exports.uploadResume = async (req, res) => {
       });
     }
 
-    // 🔥 AI Parsing
+    //AI Parsing
     let parsedData = null;
 
     try {
@@ -73,12 +73,12 @@ exports.uploadResume = async (req, res) => {
       console.log("AI parsing failed, using fallback parser");
     }
 
-    // 🔥 Fallback parser
+    //Fallback parser
     if (!parsedData) {
       parsedData = fallbackParser(text);
     }
 
-    // 🔥 Ensure required fields exist
+    //Ensure required fields exist
     parsedData.name = parsedData.name || "Unknown";
 
     parsedData.email =
@@ -99,7 +99,7 @@ exports.uploadResume = async (req, res) => {
     parsedData.projects =
       parsedData.projects || [];
 
-    // 🔥 Save candidate
+    //Save candidate
     const candidate = await Candidate.create({
       name: parsedData.name,
       email: parsedData.email,
@@ -111,16 +111,16 @@ exports.uploadResume = async (req, res) => {
 
       resumeUrl: filePath,
 
-      // 🔥 AI source
+      //AI source
       source: "ai",
     });
 
-    // 🔥 Delete uploaded file after parsing
+    //Delete uploaded file after parsing
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    // 🔥 Response
+    //Response
     res.status(201).json({
       success: true,
       msg: "Resume uploaded & parsed successfully",
@@ -136,7 +136,7 @@ exports.uploadResume = async (req, res) => {
     });
   }
 };
-// 🔥 MANUAL ADD CANDIDATE
+//MANUAL ADD CANDIDATE
 exports.addCandidateManual = async (req, res) => {
   try {
     const {
@@ -149,7 +149,7 @@ exports.addCandidateManual = async (req, res) => {
       projects,
     } = req.body;
 
-    // 🔥 Validation
+    //Validation
     if (
       !name ||
       !email ||
@@ -186,7 +186,7 @@ exports.addCandidateManual = async (req, res) => {
     });
   }
 };
-// 🔥 SEARCH (basic)
+//SEARCH (basic)
 exports.searchCandidates = async (req, res) => {
   try {
     const { skill } = req.query;

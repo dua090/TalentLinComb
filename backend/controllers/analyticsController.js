@@ -6,15 +6,8 @@ exports.getDashboardAnalytics = async (req, res) => {
     // Get all candidates
     const candidates = await Candidate.find();
 
-    // =========================
-    // TOTAL PROFILES
-    // =========================
 
     const totalProfiles = candidates.length;
-
-    // =========================
-    // AVG EXPERIENCE
-    // =========================
 
     const totalExperience = candidates.reduce(
       (acc, curr) => acc + (curr.experience || 0),
