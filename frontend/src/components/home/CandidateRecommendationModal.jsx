@@ -295,7 +295,7 @@ const CandidateRecommendationModal = ({
             </div>
           </div>
 
-          {/* ================= AI MATCH INSIGHTS ================= */}
+          {/* ================= PROFILE MATCH INSIGHTS ================= */}
 
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-3xl p-8 text-white">
 
@@ -306,7 +306,7 @@ const CandidateRecommendationModal = ({
               <Sparkles size={24} />
 
               <h3 className="text-2xl font-bold">
-                AI Match Insights
+                Profile Match Insights
               </h3>
             </div>
 
@@ -315,7 +315,9 @@ const CandidateRecommendationModal = ({
             <div className="mb-6">
 
               <p className="text-blue-100 dark:text-blue-50 leading-relaxed text-lg">
-                This candidate demonstrates strong alignment with the required technical stack and experience expectations.
+
+                This candidate demonstrates strong alignment with the required technical stack, practical implementation exposure, and relevant industry experience expectations.
+
               </p>
             </div>
 
@@ -323,26 +325,35 @@ const CandidateRecommendationModal = ({
 
             <div className="space-y-3">
 
+              {/* ================= SKILL INSIGHTS ================= */}
+
               {parsedQuery?.skills?.map((skill) => {
 
                 const matched =
                   isSkillMatched(skill);
 
                 return (
+
                   <div
                     key={skill}
                     className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-3"
                   >
 
                     <div className="text-lg">
-                      {matched ? "✅" : "⚠️"}
+
+                      {matched
+                        ? "✅"
+                        : "⚠️"}
+
                     </div>
 
                     <p className="text-sm md:text-base">
 
                       {matched
-                        ? `${skill} expertise matched successfully`
-                        : `${skill} skill not detected in profile`}
+
+                        ? `${skill} expertise matched successfully with candidate profile`
+
+                        : `${skill} skill requirement was not identified in the profile`}
                     </p>
                   </div>
                 );
@@ -357,11 +368,13 @@ const CandidateRecommendationModal = ({
                 </div>
 
                 <p className="text-sm md:text-base">
-                  {selectedCandidate.experience}+ years of relevant industry experience
+
+                  {selectedCandidate.experience || 0}+ years of relevant professional experience identified
+
                 </p>
               </div>
 
-              {/* ================= PROJECTS ================= */}
+              {/* ================= PROJECT ALIGNMENT ================= */}
 
               {selectedCandidate.projects?.length > 0 && (
 
@@ -372,11 +385,59 @@ const CandidateRecommendationModal = ({
                   </div>
 
                   <p className="text-sm md:text-base">
-                    Project experience available across{" "}
-                    {selectedCandidate.projects.length} implementation areas
+
+                    Candidate has hands-on project exposure across{" "}
+
+                    <span className="font-semibold">
+
+                      {selectedCandidate.projects.length}
+
+                    </span>
+
+                    {" "}implementation areas
+
                   </p>
                 </div>
               )}
+
+              {/* ================= EDUCATION ================= */}
+
+              {selectedCandidate.education?.length > 0 && (
+
+                <div className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-3">
+
+                  <div className="text-lg">
+                    ✅
+                  </div>
+
+                  <p className="text-sm md:text-base">
+
+                    Educational qualifications and technical background are available for evaluation
+
+                  </p>
+                </div>
+              )}
+
+              {/* ================= PROFILE SOURCE ================= */}
+
+              <div className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-3">
+
+                <div className="text-lg">
+                  {selectedCandidate.source === "manual"
+                    ? "📝"
+                    : "🤖"}
+                </div>
+
+                <p className="text-sm md:text-base">
+
+                  {selectedCandidate.source === "manual"
+
+                    ? "Profile was manually curated and verified"
+
+                    : "Profile information was extracted using AI resume parsing"}
+
+                </p>
+              </div>
             </div>
           </div>
         </div>
