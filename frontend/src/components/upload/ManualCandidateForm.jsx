@@ -48,6 +48,50 @@ const ManualCandidateForm = ({
         value,
       } = e.target;
 
+      // ================= PHONE VALIDATION =================
+
+      if (name === "phone") {
+
+        // Allow only numbers
+        const numericValue =
+          value.replace(/\D/g, "");
+
+        // Prevent more than 10 digits
+        if (
+          numericValue.length > 10
+        ) {
+
+          setErrors((prev) => ({
+            ...prev,
+            phone:
+              "Phone number cannot exceed 10 digits",
+          }));
+
+          return;
+        }
+
+        setFormData({
+          ...formData,
+          [name]: numericValue,
+        });
+
+        // Real-time validation
+        setErrors((prev) => ({
+          ...prev,
+          phone:
+            numericValue.length > 0 &&
+            numericValue.length < 10
+
+              ? "Phone number must be 10 digits"
+
+              : "",
+        }));
+
+        return;
+      }
+
+      // ================= DEFAULT INPUT =================
+
       setFormData({
         ...formData,
         [name]: value,
