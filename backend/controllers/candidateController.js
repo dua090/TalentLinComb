@@ -50,6 +50,12 @@ exports.uploadResume = async (req, res) => {
       });
     }
 
+    //Allow only PDF files
+    if (req.file.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        msg: "Only PDF files are allowed",
+      });
+    }
     const filePath = req.file.path;
 
     //Extract text from resume
