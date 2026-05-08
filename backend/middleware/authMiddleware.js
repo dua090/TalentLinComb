@@ -1,39 +1,21 @@
 const jwt = require("jsonwebtoken");
 
-const extractToken = (authHeader) => {
-  if (!authHeader) return null;
-  
-  if (authHeader.startsWith("Bearer ")) {
-    return authHeader.slice(7);
-  }
-  
-  return authHeader;
-};
+module.exports = (req, res, next) => {
+  let token = req.headers.authorization;
 
-const verifyToken = (token) => {
+  if (!token) return res.status(401).json({ msg: "No token" });
+
+  // 🔥 REMOVE "Bearer "
+  if (token.startsWith("Bearer ")) {
+    token = token.slice(7);
+  }
+
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.log(err); // helpful debug
+    res.status(401).json({ msg: "Invalid token" });
   }
 };
-
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = extractToken(authHeader);
-
-  if (!token) {
-    return res.status(401).json({ msg: "No token provided" });
-  }
-
-  const decoded = verifyToken(token);
-
-  if (!decoded) {
-    return res.status(401).json({ msg: "Invalid or expired token" });
-  }
-
-  req.user = decoded;
-  next();
-};
-
-module.exports = authMiddleware;
