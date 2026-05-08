@@ -7,91 +7,122 @@ const filterProfiles = ({
   domainMap,
 }) => {
 
-  return profiles.filter((profile) => {
+  return profiles.filter(
+    (profile) => {
 
-    // ================= SEARCH =================
+      // ================= SEARCH =================
 
-    const matchesSearch =
+      const matchesSearch =
 
-      search.trim() === "" ||
+        !search ||
 
-      profile.skills
-        ?.join(" ")
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        );
-
-    // ================= EXPERIENCE =================
-
-    let matchesExperience = true;
-
-    if (
-      experienceFilter === "Junior"
-    ) {
-
-      matchesExperience =
-        profile.experience <= 2;
-    }
-
-    else if (
-      experienceFilter === "Mid"
-    ) {
-
-      matchesExperience =
-        profile.experience > 2 &&
-        profile.experience <= 5;
-    }
-
-    else if (
-      experienceFilter === "Senior"
-    ) {
-
-      matchesExperience =
-        profile.experience > 5;
-    }
-
-    // ================= DOMAIN =================
-
-    let matchesDomain = true;
-
-    if (
-      domainFilter !== "All"
-    ) {
-
-      matchesDomain =
         profile.skills?.some(
           (skill) =>
-            domainMap[
-              domainFilter
-            ]?.includes(skill)
+
+            skill
+              .toLowerCase()
+              .includes(
+                search.toLowerCase()
+              )
         );
-    }
 
-    // ================= SKILLS =================
+      // ================= EXPERIENCE =================
 
-    let matchesSkills = true;
+      let matchesExperience =
+        true;
 
-    if (
-      selectedSkills.length > 0
-    ) {
+      const experience =
+        Number(
+          profile.experience
+        );
 
-      matchesSkills =
+      if (
+        experienceFilter ===
+        "0-2"
+      ) {
+
+        matchesExperience =
+          experience >= 0 &&
+          experience <= 2;
+      }
+
+      else if (
+        experienceFilter ===
+        "3-5"
+      ) {
+
+        matchesExperience =
+          experience >= 3 &&
+          experience <= 5;
+      }
+
+      else if (
+        experienceFilter ===
+        "5+"
+      ) {
+
+        matchesExperience =
+          experience >= 5;
+      }
+
+      // ================= DOMAIN =================
+
+      let matchesDomain =
+        true;
+
+      if (
+        domainFilter !== "All"
+      ) {
+
+        const domainSkills =
+          domainMap[
+            domainFilter
+          ] || [];
+
+        matchesDomain =
+          profile.skills?.some(
+            (skill) =>
+
+              domainSkills.includes(
+                skill
+              )
+          );
+      }
+
+      // ================= SELECTED SKILLS =================
+
+      const matchesSkills =
+
+        selectedSkills.length === 0 ||
+
         selectedSkills.every(
-          (skill) =>
-            profile.skills?.includes(
-              skill
+          (selectedSkill) =>
+
+            profile.skills?.some(
+              (skill) =>
+
+                skill
+                  .toLowerCase()
+                  .includes(
+                    selectedSkill.toLowerCase()
+                  )
             )
         );
-    }
 
-    return (
-      matchesSearch &&
-      matchesExperience &&
-      matchesDomain &&
-      matchesSkills
-    );
-  });
+      // ================= FINAL =================
+
+      return (
+
+        matchesSearch &&
+
+        matchesExperience &&
+
+        matchesDomain &&
+
+        matchesSkills
+      );
+    }
+  );
 };
 
 export default filterProfiles;
