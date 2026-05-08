@@ -50,16 +50,6 @@ const WelcomeBanner = () => {
 
       <div className="relative z-10">
 
-        {/* TAG */}
-
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-sm font-medium mb-5">
-
-          <Sparkles size={16} />
-
-          AI Talent Intelligence
-
-        </div>
-
         {/* TITLE */}
 
         <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">
