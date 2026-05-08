@@ -34,18 +34,30 @@ const UploadResumeCard = ({
 
   // ================= FILE CHANGE =================
 
-  const handleFileChange =
-    (e) => {
+const handleFileChange =
+  (e) => {
 
-      const selectedFile =
-        e.target.files[0];
+    const selectedFile =
+      e.target.files[0];
 
-      if (!selectedFile) return;
+    if (!selectedFile) return;
 
-      setFile(selectedFile);
+    if (
+      selectedFile.type !==
+      "application/pdf"
+    ) {
 
-      setMsg("");
-    };
+      setMsg(
+        "❌ Only PDF files are allowed"
+      );
+
+      return;
+    }
+
+    setFile(selectedFile);
+
+    setMsg("");
+  };
 
   // ================= DRAG =================
 
@@ -67,25 +79,36 @@ const UploadResumeCard = ({
       setDragActive(false);
     };
 
-  const handleDrop =
-    (e) => {
+const handleDrop =
+  (e) => {
 
-      if (loading) return;
+    if (loading) return;
 
-      e.preventDefault();
+    e.preventDefault();
 
-      setDragActive(false);
+    setDragActive(false);
 
-      const droppedFile =
-        e.dataTransfer.files[0];
+    const droppedFile =
+      e.dataTransfer.files[0];
 
-      if (!droppedFile) return;
+    if (!droppedFile) return;
 
-      setFile(droppedFile);
+    if (
+      droppedFile.type !==
+      "application/pdf"
+    ) {
 
-      setMsg("");
-    };
+      setMsg(
+        "❌ Only PDF files are allowed"
+      );
 
+      return;
+    }
+
+    setFile(droppedFile);
+
+    setMsg("");
+  };
   // ================= UPLOAD =================
 
   const handleUpload =
@@ -208,7 +231,7 @@ const UploadResumeCard = ({
             </div>
 
             <p className="text-xs text-gray-400 mt-4">
-              Supported: PDF / DOCX
+              Supported: PDF
             </p>
 
             <input
@@ -216,7 +239,7 @@ const UploadResumeCard = ({
                 fileInputRef
               }
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf"
               onChange={
                 handleFileChange
               }
