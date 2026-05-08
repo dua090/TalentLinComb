@@ -1,5 +1,3 @@
-// src/components/home/QuickActions.jsx
-
 import {
   Upload,
   Users,

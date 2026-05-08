@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import { useEffect, useState } from "react";
 
 import { useAuth } from "../context/AuthContext";

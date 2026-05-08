@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
@@ -8,7 +7,6 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // 🔁 Load user on refresh
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -16,7 +14,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ✅ LOGIN (FIXED PROPERLY)
   const login = async (email, password) => {
     const res = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
@@ -32,13 +29,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || "Login failed");
     }
 
-    // Save FULL response (token + user)
     setUser(data);
 
     localStorage.setItem("user", JSON.stringify(data));
   };
 
-  // ✅ SIGNUP
   const signup = async (name, email, password) => {
     const res = await fetch("http://localhost:5000/api/auth/register", {
       method: "POST",
@@ -53,7 +48,6 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  // 🚪 LOGOUT
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");

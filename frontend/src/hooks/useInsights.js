@@ -1,5 +1,3 @@
-// src/hooks/useInsights.js
-
 import {
   useEffect,
   useState,

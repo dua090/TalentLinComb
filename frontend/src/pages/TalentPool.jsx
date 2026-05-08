@@ -1,5 +1,3 @@
-// src/pages/TalentPool.jsx
-
 import {
   useEffect,
   useRef,

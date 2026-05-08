@@ -1,5 +1,3 @@
-// src/components/talent/CandidateCard.jsx
-
 import {
   Sparkles,
   UserRound,

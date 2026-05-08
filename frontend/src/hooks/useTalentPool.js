@@ -1,5 +1,3 @@
-// src/hooks/useTalentPool.js
-
 import {
   useCallback,
   useEffect,
@@ -100,7 +98,6 @@ const useTalentPool = () => {
 
   }, []);
 
-  // ================= TOP SKILLS =================
   // DYNAMICALLY GENERATED FROM CANDIDATE DATA
 
   const allSkills =
@@ -216,7 +213,6 @@ const useTalentPool = () => {
       return [...filtered].sort(
         (a, b) => {
 
-          // ================= FILTER MODE =================
           // SORT BY MATCH SCORE
 
           if (hasActiveFilters) {

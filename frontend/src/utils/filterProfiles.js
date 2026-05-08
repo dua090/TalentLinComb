@@ -1,5 +1,3 @@
-// src/utils/filterProfiles.js
-
 const filterProfiles = ({
   profiles,
   search,

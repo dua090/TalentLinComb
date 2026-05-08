@@ -1,5 +1,3 @@
-// src/pages/Insights.jsx
-
 import { useEffect, useState } from "react";
 
 import {

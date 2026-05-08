@@ -1,5 +1,3 @@
-// src/utils/generateMatchScore.js
-
 const generateMatchScore = ({
   profile,
   selectedSkills,

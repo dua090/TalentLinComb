@@ -1,5 +1,3 @@
-// src/components/home/RecentCandidates.jsx
-
 import {
   useEffect,
   useState,

@@ -1,5 +1,3 @@
-// src/constants/domainMap.js
-
 const domainMap = {
 
   Frontend: [
