@@ -100,6 +100,7 @@ AI-Powered-CMIT/
 │   ├── package.json
 │   └── server.js
 │
+├── package.json
 ├── README.md
 └── .gitignore
 ```
@@ -136,17 +137,9 @@ cd AI-Powered-CMIT
 
 ---
 
-# Frontend Setup
+# Step 3 — Install Root Dependencies
 
-## Step 3 — Navigate to Frontend Folder
-
-```bash
-cd frontend
-```
-
----
-
-## Step 4 — Install Frontend Dependencies
+Install root dependencies including concurrently.
 
 ```bash
 npm install
@@ -154,26 +147,30 @@ npm install
 
 ---
 
-## Step 5 — Create Frontend Environment File
+# Frontend Setup
+
+## Step 4 — Navigate to Frontend Folder
+
+```bash
+cd frontend
+```
+
+---
+
+## Step 5 — Install Frontend Dependencies
+
+```bash
+npm install
+```
+
+---
+
+## Step 6 — Create Frontend Environment File
 
 Create a `.env` file inside the `frontend` folder.
 
 ```env
 VITE_API_URL=http://localhost:5000
-```
-
----
-
-## Step 6 — Start Frontend Development Server
-
-```bash
-npm run dev
-```
-
-Frontend runs on:
-
-```bash
-http://localhost:5173
 ```
 
 ---
@@ -214,13 +211,42 @@ GEMINI_API_KEY=your_gemini_api_key
 
 ---
 
-## Step 10 — Start Backend Server
+# Running the Application
+
+## Step 10 — Return to Root Folder
+
+```bash
+cd ..
+```
+
+If already inside frontend:
+
+```bash
+cd ..
+cd ..
+```
+
+---
+
+## Step 11 — Run Frontend and Backend Together
+
+Start both frontend and backend simultaneously using:
 
 ```bash
 npm run dev
 ```
 
-Backend runs on:
+---
+
+# Application URLs
+
+## Frontend
+
+```bash
+http://localhost:5173
+```
+
+## Backend
 
 ```bash
 http://localhost:5000
@@ -228,21 +254,30 @@ http://localhost:5000
 
 ---
 
-# Running the Application
+# Root Scripts
 
-## Start Backend
+The project uses the following root scripts:
 
-```bash
-cd backend
-npm run dev
+```json
+{
+  "scripts": {
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently -n BACKEND,FRONTEND -c green,blue \"npm run server\" \"npm run client\"",
+    "install-all": "cd backend && npm install && cd ../frontend && npm install"
+  }
+}
 ```
 
 ---
 
-## Start Frontend
+# Quick Start
+
+After cloning the repository:
 
 ```bash
-cd frontend
+npm install
+npm run install-all
 npm run dev
 ```
 
