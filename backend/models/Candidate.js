@@ -48,7 +48,7 @@ const candidateSchema = new mongoose.Schema(
       default: "",
     },
 
-    // 🔥 REQUIRED SOURCE
+    // REQUIRED SOURCE
     source: {
       type: String,
       enum: ["ai", "manual"],
