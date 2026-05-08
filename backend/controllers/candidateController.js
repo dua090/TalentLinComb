@@ -56,6 +56,16 @@ exports.uploadResume = async (req, res) => {
         msg: "Only PDF files are allowed",
       });
     }
+
+    //File size limit: 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+    if (req.file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        msg: "File size should not exceed 5MB",
+      });
+    }
+
     const filePath = req.file.path;
 
     //Extract text from resume
