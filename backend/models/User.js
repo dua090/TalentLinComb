@@ -1,3 +1,5 @@
+// models/User.js
+
 const mongoose =
   require("mongoose");
 
@@ -24,10 +26,12 @@ const userSchema =
         default: "recruiter",
       },
     },
+
     {
       timestamps: true,
     }
   );
+
 module.exports =
   mongoose.model(
     "User",
