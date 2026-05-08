@@ -8,20 +8,31 @@ import {
 
 const useAISearch = () => {
 
+  // ================= STATES =================
+
   const [query, setQuery] =
     useState("");
+
+  const [
+    searchedQuery,
+    setSearchedQuery,
+  ] = useState("");
 
   const [loading, setLoading] =
     useState(false);
 
-  const [showResults, setShowResults] =
-    useState(false);
+  const [
+    showResults,
+    setShowResults,
+  ] = useState(false);
 
   const [results, setResults] =
     useState([]);
 
-  const [parsedQuery, setParsedQuery] =
-    useState(null);
+  const [
+    parsedQuery,
+    setParsedQuery,
+  ] = useState(null);
 
   // ================= SEARCH =================
 
@@ -30,11 +41,19 @@ const useAISearch = () => {
   ) => {
 
     const finalQuery =
-      typeof customQuery === "string"
+      typeof customQuery ===
+      "string"
+
         ? customQuery
+
         : query;
 
-    if (!finalQuery?.trim()) {
+    // ================= EMPTY CHECK =================
+
+    if (
+      !finalQuery?.trim()
+    ) {
+
       return;
     }
 
@@ -43,6 +62,12 @@ const useAISearch = () => {
       setLoading(true);
 
       setShowResults(true);
+
+      // ================= STORE SEARCHED QUERY =================
+
+      setSearchedQuery(
+        finalQuery
+      );
 
       const data =
         await smartSearch(
@@ -89,6 +114,8 @@ const useAISearch = () => {
 
     query,
     setQuery,
+
+    searchedQuery,
 
     loading,
 

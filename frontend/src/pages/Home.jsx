@@ -24,6 +24,7 @@ const Home = () => {
 
     query,
     setQuery,
+    searchedQuery,
 
     loading,
 
@@ -108,7 +109,7 @@ const Home = () => {
             loading={loading}
             results={results}
             parsedQuery={parsedQuery}
-            query={query}
+            query={searchedQuery}
             setSelectedCandidate={setSelectedCandidate}
           />
 
