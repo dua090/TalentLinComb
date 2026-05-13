@@ -1,25 +1,29 @@
 import { Sparkles } from "lucide-react";
 
+import {
+  isSemanticSkillMatch,
+} from "../../utils/semanticSkillMatcher";
+
 const CandidateRecommendationModal = ({
   selectedCandidate,
   setSelectedCandidate,
   parsedQuery,
 }) => {
 
-  if (!selectedCandidate) return null;
+  if (!selectedCandidate) {
+    return null;
+  }
 
   // ================= HELPERS =================
 
-  const isSkillMatched = (skill) => {
+  const isSkillMatched =
+    (skill) => {
 
-    return selectedCandidate.skills?.some(
-      (candidateSkill) =>
-
-        candidateSkill
-          .toLowerCase()
-          .includes(skill.toLowerCase())
-    );
-  };
+      return isSemanticSkillMatch(
+        skill,
+        selectedCandidate.skills
+      );
+    };
 
   return (
 
@@ -87,15 +91,16 @@ const CandidateRecommendationModal = ({
 
               {selectedCandidate.skills?.map((skill) => {
 
+                // ================= FIXED MATCHING =================
+
                 const matched =
                   parsedQuery?.skills?.some(
                     (parsedSkill) =>
 
-                      skill
-                        .toLowerCase()
-                        .includes(
-                          parsedSkill.toLowerCase()
-                        )
+                      isSemanticSkillMatch(
+                        parsedSkill,
+                        [skill]
+                      )
                   );
 
                 return (
@@ -180,8 +185,6 @@ const CandidateRecommendationModal = ({
 
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-3xl p-8 text-white">
 
-            {/* ================= HEADER ================= */}
-
             <div className="flex items-center gap-3 mb-6">
 
               <Sparkles size={24} />
@@ -193,8 +196,6 @@ const CandidateRecommendationModal = ({
               </h3>
             </div>
 
-            {/* ================= SUMMARY ================= */}
-
             <div className="mb-6">
 
               <p className="text-blue-100 dark:text-blue-50 leading-relaxed text-lg">
@@ -203,8 +204,6 @@ const CandidateRecommendationModal = ({
 
               </p>
             </div>
-
-            {/* ================= INSIGHTS ================= */}
 
             <div className="space-y-3">
 
@@ -258,7 +257,7 @@ const CandidateRecommendationModal = ({
                 </p>
               </div>
 
-              {/* ================= PROJECT ALIGNMENT ================= */}
+              {/* ================= PROJECTS ================= */}
 
               {selectedCandidate.projects?.length > 0 && (
 
@@ -302,7 +301,7 @@ const CandidateRecommendationModal = ({
                 </div>
               )}
 
-              {/* ================= PROFILE SOURCE ================= */}
+              {/* ================= SOURCE ================= */}
 
               <div className="flex items-center gap-3 bg-white/10 rounded-2xl px-4 py-3">
 

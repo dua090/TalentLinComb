@@ -48,6 +48,11 @@ const candidateSchema = new mongoose.Schema(
       default: "",
     },
 
+    embedding: {
+    type: [Number],
+    default: [],
+  },
+
     // REQUIRED SOURCE
     source: {
       type: String,

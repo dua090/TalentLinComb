@@ -3,13 +3,37 @@ const pdfParse = require("pdf-parse");
 const mammoth = require("mammoth");
 
 const Candidate = require("../models/Candidate");
-const { parseResumeWithAI } = require("../services/aiService");
 
-// Extract text from file
-const extractText = async (filePath, mimetype) => {
-  if (mimetype === "application/pdf") {
-    const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdfParse(dataBuffer);
+const {
+  parseResumeWithAI,
+} = require("../services/aiService");
+
+const {
+  generateEmbedding,
+} = require("../services/embeddingService");
+
+// ================= EXTRACT TEXT =================
+
+const extractText = async (
+  filePath,
+  mimetype
+) => {
+
+  if (
+    mimetype ===
+    "application/pdf"
+  ) {
+
+    const dataBuffer =
+      fs.readFileSync(
+        filePath
+      );
+
+    const data =
+      await pdfParse(
+        dataBuffer
+      );
+
     return data.text;
   }
 
@@ -17,219 +41,480 @@ const extractText = async (filePath, mimetype) => {
     mimetype ===
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   ) {
-    const result = await mammoth.extractRawText({ path: filePath });
+
+    const result =
+      await mammoth.extractRawText({
+        path: filePath,
+      });
+
     return result.value;
   }
 
   return "";
 };
 
-//Regex fallback parser (important)
-const fallbackParser = (text) => {
-  const email = text.match(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i);
-  const phone = text.match(/\b\d{10}\b/);
+// ================= FALLBACK PARSER =================
+
+const fallbackParser = (
+  text
+) => {
+
+  const email =
+    text.match(
+      /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
+    );
+
+  const phone =
+    text.match(/\b\d{10}\b/);
 
   return {
-    name: text.split("\n")[0] || "Unknown",
-    email: email ? email[0] : "Not found",
-    phone: phone ? phone[0] : "Not found",
+
+    name:
+      text.split("\n")[0] ||
+      "Unknown",
+
+    email:
+      email
+        ? email[0]
+        : "Not found",
+
+    phone:
+      phone
+        ? phone[0]
+        : "Not found",
+
     skills: [],
+
     experience: 0,
+
     education: [],
-    projects: []
+
+    projects: [],
   };
 };
 
-//MAIN CONTROLLER
-exports.uploadResume = async (req, res) => {
-  try {
-    //Check file
-    if (!req.file) {
-      return res.status(400).json({
-        msg: "No file uploaded",
-      });
-    }
+// ================= UPLOAD RESUME =================
 
-    //Allow only PDF files
-    if (req.file.mimetype !== "application/pdf") {
-      return res.status(400).json({
-        msg: "Only PDF files are allowed",
-      });
-    }
-
-    //File size limit: 5MB
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-    if (req.file.size > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        msg: "File size should not exceed 5MB",
-      });
-    }
-
-    const filePath = req.file.path;
-
-    //Extract text from resume
-    const text = await extractText(
-      filePath,
-      req.file.mimetype
-    );
-
-    if (!text) {
-      return res.status(400).json({
-        msg: "Could not extract text",
-      });
-    }
-
-    //AI Parsing
-    let parsedData = null;
+exports.uploadResume =
+  async (req, res) => {
 
     try {
-      parsedData = await parseResumeWithAI(text);
-    } catch (err) {
-      console.log("AI parsing failed, using fallback parser");
-    }
 
-    //Fallback parser
-    if (!parsedData) {
-      parsedData = fallbackParser(text);
-    }
+      // FILE CHECK
 
-    //Ensure required fields exist
-    parsedData.name = parsedData.name || "Unknown";
+      if (!req.file) {
 
-    parsedData.email =
-      parsedData.email || "Not found";
+        return res
+          .status(400)
+          .json({
+            msg: "No file uploaded",
+          });
+      }
 
-    parsedData.phone =
-      parsedData.phone || "Not found";
+      // ONLY PDF
 
-    parsedData.skills =
-      parsedData.skills || [];
+      if (
+        req.file.mimetype !==
+        "application/pdf"
+      ) {
 
-    parsedData.experience =
-      parsedData.experience || 0;
+        return res
+          .status(400)
+          .json({
+            msg: "Only PDF files are allowed",
+          });
+      }
 
-    parsedData.education =
-      parsedData.education || [];
+      // FILE SIZE LIMIT
 
-    parsedData.projects =
-      parsedData.projects || [];
+      const MAX_FILE_SIZE =
+        5 * 1024 * 1024;
 
-    //Save candidate
-    const candidate = await Candidate.create({
-      name: parsedData.name,
-      email: parsedData.email,
-      phone: parsedData.phone,
-      skills: parsedData.skills,
-      experience: parsedData.experience,
-      education: parsedData.education,
-      projects: parsedData.projects,
+      if (
+        req.file.size >
+        MAX_FILE_SIZE
+      ) {
 
-      resumeUrl: filePath,
+        return res
+          .status(400)
+          .json({
+            msg: "File size should not exceed 5MB",
+          });
+      }
 
-      //AI source
-      source: "ai",
-    });
+      const filePath =
+        req.file.path;
 
-    //Delete uploaded file after parsing
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+      // EXTRACT TEXT
 
-    //Response
-    res.status(201).json({
-      success: true,
-      msg: "Resume uploaded & parsed successfully",
-      candidate,
-    });
+      const text =
+        await extractText(
+          filePath,
+          req.file.mimetype
+        );
 
-  } catch (error) {
-    console.error("UPLOAD RESUME ERROR:", error);
+      if (!text) {
 
-    res.status(500).json({
-      success: false,
-      msg: "Server error",
-    });
-  }
-};
-//MANUAL ADD CANDIDATE
-exports.addCandidateManual = async (req, res) => {
-  try {
-    const {
-      name,
-      email,
-      phone,
-      skills,
-      experience,
-      education,
-      projects,
-    } = req.body;
+        return res
+          .status(400)
+          .json({
+            msg: "Could not extract text",
+          });
+      }
 
-    //Validation
-    if (
-      !name ||
-      !email ||
-      !phone ||
-      !skills ||
-      experience === undefined
-    ) {
-      return res.status(400).json({
-        msg: "name, email, phone, skills, experience are required",
+      // AI PARSING
+
+      let parsedData =
+        null;
+
+      try {
+
+        parsedData =
+          await parseResumeWithAI(
+            text
+          );
+
+      } catch (err) {
+
+        console.log(
+          "AI parsing failed, using fallback parser"
+        );
+      }
+
+      // FALLBACK
+
+      if (!parsedData) {
+
+        parsedData =
+          fallbackParser(
+            text
+          );
+      }
+
+      // SAFE DEFAULTS
+
+      parsedData.name =
+        parsedData.name ||
+        "Unknown";
+
+      parsedData.email =
+        parsedData.email ||
+        "Not found";
+
+      parsedData.phone =
+        parsedData.phone ||
+        "Not found";
+
+      parsedData.skills =
+        parsedData.skills ||
+        [];
+
+      parsedData.experience =
+        parsedData.experience ||
+        0;
+
+      parsedData.education =
+        parsedData.education ||
+        [];
+
+      parsedData.projects =
+        parsedData.projects ||
+        [];
+
+      // ================= SEARCHABLE TEXT =================
+
+      const searchableText = `
+
+${parsedData.name}
+
+${parsedData.skills.join(
+  " "
+)}
+
+${parsedData.projects.join(
+  " "
+)}
+
+${parsedData.education.join(
+  " "
+)}
+
+${parsedData.experience}
+years experience
+
+`;
+
+      // ================= GENERATE EMBEDDING =================
+
+      const embedding =
+        await generateEmbedding(
+          searchableText
+        );
+
+      // ================= SAVE CANDIDATE =================
+
+      const candidate =
+        await Candidate.create({
+
+          name:
+            parsedData.name,
+
+          email:
+            parsedData.email,
+
+          phone:
+            parsedData.phone,
+
+          skills:
+            parsedData.skills,
+
+          experience:
+            parsedData.experience,
+
+          education:
+            parsedData.education,
+
+          projects:
+            parsedData.projects,
+
+          resumeUrl:
+            filePath,
+
+          embedding,
+
+          source: "ai",
+        });
+
+      // DELETE FILE
+
+      if (
+        fs.existsSync(
+          filePath
+        )
+      ) {
+
+        fs.unlinkSync(
+          filePath
+        );
+      }
+
+      // RESPONSE
+
+      res.status(201).json({
+
+        success: true,
+
+        msg:
+          "Resume uploaded & parsed successfully",
+
+        candidate,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "UPLOAD RESUME ERROR:",
+        error
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        msg: "Server error",
       });
     }
+  };
 
-    const candidate = await Candidate.create({
-      name,
-      email,
-      phone,
-      skills,
-      experience,
-      education: education || [],
-      projects: projects || [],
+// ================= MANUAL ADD =================
 
-      source: "manual",
-    });
+exports.addCandidateManual =
+  async (req, res) => {
 
-    res.status(201).json({
-      msg: "Candidate added manually",
-      candidate,
-    });
-  } catch (error) {
-    console.error(error);
+    try {
 
-    res.status(500).json({
-      msg: "Server error",
-    });
-  }
-};
-//SEARCH (basic)
-exports.searchCandidates = async (req, res) => {
-  try {
-    const { skill } = req.query;
+      const {
 
-    let query = {};
-    if (skill) {
-      query.skills = { $regex: skill, $options: "i" };
+        name,
+
+        email,
+
+        phone,
+
+        skills,
+
+        experience,
+
+        education,
+
+        projects,
+
+      } = req.body;
+
+      // VALIDATION
+
+      if (
+        !name ||
+        !email ||
+        !phone ||
+        !skills ||
+        experience ===
+          undefined
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            msg:
+              "name, email, phone, skills, experience are required",
+          });
+      }
+
+      // ================= SEARCHABLE TEXT =================
+
+      const searchableText = `
+
+${name}
+
+${skills.join(" ")}
+
+${
+  projects?.join(
+    " "
+  ) || ""
+}
+
+${
+  education?.join(
+    " "
+  ) || ""
+}
+
+${experience}
+years experience
+
+`;
+
+      // ================= EMBEDDING =================
+
+      const embedding =
+        await generateEmbedding(
+          searchableText
+        );
+
+      // ================= SAVE =================
+
+      const candidate =
+        await Candidate.create({
+
+          name,
+
+          email,
+
+          phone,
+
+          skills,
+
+          experience,
+
+          education:
+            education ||
+            [],
+
+          projects:
+            projects || [],
+
+          embedding,
+
+          source:
+            "manual",
+        });
+
+      res.status(201).json({
+
+        msg:
+          "Candidate added manually",
+
+        candidate,
+      });
+
+    } catch (error) {
+
+      console.error(
+        error
+      );
+
+      res.status(500).json({
+
+        msg: "Server error",
+      });
     }
+  };
 
-    const candidates = await Candidate.find(query);
-    res.json(candidates);
+// ================= BASIC SEARCH =================
 
-  } catch (err) {
-    res.status(500).json({ msg: "Search error" });
-  }
-};
+exports.searchCandidates =
+  async (req, res) => {
 
-exports.getCandidates = async (req, res) => {
-  try {
-    const candidates = await Candidate.find().sort({ createdAt: -1 });
+    try {
 
-    res.status(200).json(candidates);
-  } catch (err) {
-    console.error("GET CANDIDATES ERROR:", err);
+      const { skill } =
+        req.query;
 
-    res.status(500).json({
-      message: "Failed to fetch candidates",
-    });
-  }
-};
+      let query = {};
+
+      if (skill) {
+
+        query.skills = {
+          $regex: skill,
+          $options: "i",
+        };
+      }
+
+      const candidates =
+        await Candidate.find(
+          query
+        );
+
+      res.json(
+        candidates
+      );
+
+    } catch (err) {
+
+      res.status(500).json({
+        msg: "Search error",
+      });
+    }
+  };
+
+// ================= GET CANDIDATES =================
+
+exports.getCandidates =
+  async (req, res) => {
+
+    try {
+
+      const candidates =
+        await Candidate.find().sort({
+          createdAt: -1,
+        });
+
+      res
+        .status(200)
+        .json(candidates);
+
+    } catch (err) {
+
+      console.error(
+        "GET CANDIDATES ERROR:",
+        err
+      );
+
+      res.status(500).json({
+
+        message:
+          "Failed to fetch candidates",
+      });
+    }
+  };

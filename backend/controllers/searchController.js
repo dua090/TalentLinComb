@@ -1,37 +1,59 @@
-const Candidate = require("../models/Candidate");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Candidate =
+  require("../models/Candidate");
 
-const genAI = new GoogleGenerativeAI(
-  process.env.GEMINI_API_KEY
+const {
+  GoogleGenerativeAI,
+} = require(
+  "@google/generative-ai"
 );
 
-exports.smartSearch = async (
-  req,
-  res
-) => {
+const cosineSimilarity =
+  require(
+    "cosine-similarity"
+  );
 
-  try {
+const {
+  generateEmbedding,
+} = require(
+  "../services/embeddingService"
+);
 
-    const { prompt } =
-      req.body;
+const genAI =
+  new GoogleGenerativeAI(
+    process.env
+      .GEMINI_API_KEY
+  );
 
-    if (!prompt) {
+exports.smartSearch =
+  async (req, res) => {
 
-      return res
-        .status(400)
-        .json({
-          msg: "Prompt is required",
-        });
-    }
+    try {
 
-    const model =
-      genAI.getGenerativeModel({
-        model:
-          "gemini-3-flash-preview",
-      });
+      const { prompt } =
+        req.body;
 
-    const result =
-      await model.generateContent(`
+      if (!prompt) {
+
+        return res
+          .status(400)
+          .json({
+            msg:
+              "Prompt is required",
+          });
+      }
+
+      // ================= GEMINI QUERY PARSING =================
+
+      const model =
+        genAI.getGenerativeModel(
+          {
+            model:
+              "gemini-3-flash-preview",
+          }
+        );
+
+      const result =
+        await model.generateContent(`
 You are an AI recruiter assistant.
 
 Extract structured data from the query below.
@@ -50,444 +72,352 @@ Return:
 }
 `);
 
-    let text =
-      result.response.text();
-    const match =
-      text.match(/\{[\s\S]*\}/);
+      let text =
+        result.response.text();
 
-    if (!match) {
-
-      throw new Error(
-        "Invalid AI response"
-      );
-    }
-
-    const parsed =
-      JSON.parse(match[0]);
-
-    console.log(
-      "✅ AI Parsed:",
-      parsed
-    );
-
-    // =========================
-    // BUILD MONGO QUERY
-    // =========================
-
-    let query = {};
-
-    if (parsed.skills?.length) {
-
-      query.$or =
-        parsed.skills.map(
-          (skill) => ({
-            skills: {
-              $regex: skill,
-              $options: "i",
-            },
-          })
+      const match =
+        text.match(
+          /\{[\s\S]*\}/
         );
-    }
 
-    if (
-      parsed.experience !==
-        null &&
-      parsed.experience !==
-        undefined &&
-      !isNaN(
-        parsed.experience
-      )
-    ) {
+      if (!match) {
 
-      query.experience = {
-        $gte: Number(
-          parsed.experience
-        ),
-      };
-    }
+        throw new Error(
+          "Invalid AI response"
+        );
+      }
 
-    const candidates =
-      await Candidate.find(
-        query
+      const parsed =
+        JSON.parse(
+          match[0]
+        );
+
+      console.log(
+        "✅ AI Parsed:",
+        parsed
       );
 
-    // DOMAIN SKILLS
+      // ================= SEMANTIC QUERY =================
 
-    const frontendSkills = [
-      "React",
-      "React.js",
-      "Next.js",
-      "Vue",
-      "Vue.js",
-      "Angular",
-      "JavaScript",
-      "TypeScript",
-      "HTML",
-      "CSS",
-      "SCSS",
-      "Bootstrap",
-      "Tailwind CSS",
-      "Redux",
-      "Redux Toolkit",
-      "Material UI",
-      "UI/UX",
-      "Figma",
-      "Responsive Design",
-    ];
+      const semanticQuery = `
 
-    const backendSkills = [
-      "Node.js",
-      "Node",
-      "Express",
-      "Express.js",
-      "Java",
-      "Spring Boot",
-      "Python",
-      "Django",
-      "Flask",
-      "PHP",
-      "Laravel",
-      "REST APIs",
-      "GraphQL",
-      "MongoDB",
-      "MySQL",
-      "PostgreSQL",
-      "SQL",
-      "Firebase",
-      "Redis",
-      "API Development",
-      "Microservices",
-    ];
+${prompt}
 
-    const cloudSkills = [
-      "AWS",
-      "Azure",
-      "Google Cloud",
-      "GCP",
-      "Docker",
-      "Kubernetes",
-      "CI/CD",
-      "Jenkins",
-      "Terraform",
-      "Linux",
-      "Nginx",
-      "DevOps",
-      "Cloud Computing",
-      "Serverless",
-    ];
+${parsed.skills?.join(
+  " "
+)}
 
-    const aiSkills = [
-      "Machine Learning",
-      "Deep Learning",
-      "Artificial Intelligence",
-      "TensorFlow",
-      "PyTorch",
-      "NLP",
-      "Computer Vision",
-      "LLM",
-      "OpenAI",
-      "LangChain",
-      "Generative AI",
-      "Data Science",
-      "Data Analysis",
-      "Pandas",
-      "NumPy",
-      "Scikit-learn",
-      "AI",
-    ];
+${
+  parsed.experience ||
+  ""
+}
 
-    // SMART MATCH SCORING
+years experience
 
-    const scoredCandidates =
-      candidates.map(
-        (candidate) => {
+`;
 
-          let totalScore = 0;
+      const queryEmbedding =
+        await generateEmbedding(
+          semanticQuery
+        );
 
-          // SKILL SCORE (50%)
+      // ================= FETCH ALL CANDIDATES =================
 
-          let skillScore = 0;
+      const candidates =
+        await Candidate.find({});
 
-          if (
-            parsed.skills?.length
-          ) {
+      // ================= SCORING =================
 
-            const matchedSkills =
-              parsed.skills.filter(
-                (skill) =>
+      const scoredCandidates =
+        candidates.map(
+          (
+            candidate
+          ) => {
 
-                  candidate.skills?.some(
-                    (
-                      candidateSkill
-                    ) =>
+            let totalScore =
+              0;
 
-                      candidateSkill
-                        .toLowerCase()
-                        .includes(
-                          skill.toLowerCase()
-                        )
-                  )
-              );
+            // ================= SKILL SCORE =================
 
-            skillScore =
-              matchedSkills.length /
-              parsed.skills.length;
-          }
-
-          // EXPERIENCE SCORE (20%)
-
-          let experienceScore =
-            1;
-
-          if (
-            parsed.experience !==
-              null &&
-            parsed.experience !==
-              undefined &&
-            !isNaN(
-              parsed.experience
-            )
-          ) {
-
-            const difference =
-              parsed.experience -
-              candidate.experience;
-
-            if (
-              difference <= 0
-            ) {
-
-              experienceScore =
-                1;
-
-            } else if (
-              difference === 1
-            ) {
-
-              experienceScore =
-                0.7;
-
-            } else if (
-              difference === 2
-            ) {
-
-              experienceScore =
-                0.5;
-
-            } else {
-
-              experienceScore =
-                0.2;
-            }
-          }
-
-          // DOMAIN SCORE (15%)
-
-          let domainScore =
-            0.5;
-
-          const candidateSkills =
-            candidate.skills ||
-            [];
-
-          const hasFrontend =
-            candidateSkills.some(
-              (skill) =>
-                frontendSkills.includes(
-                  skill
-                )
-            );
-
-          const hasBackend =
-            candidateSkills.some(
-              (skill) =>
-                backendSkills.includes(
-                  skill
-                )
-            );
-
-          const hasCloud =
-            candidateSkills.some(
-              (skill) =>
-                cloudSkills.includes(
-                  skill
-                )
-            );
-
-          const hasAI =
-            candidateSkills.some(
-              (skill) =>
-                aiSkills.includes(
-                  skill
-                )
-            );
-
-          if (
-            parsed.skills?.some(
-              (skill) =>
-                frontendSkills.includes(
-                  skill
-                )
-            ) &&
-            hasFrontend
-          ) {
-
-            domainScore = 1;
-
-          } else if (
-            parsed.skills?.some(
-              (skill) =>
-                backendSkills.includes(
-                  skill
-                )
-            ) &&
-            hasBackend
-          ) {
-
-            domainScore = 1;
-
-          } else if (
-            parsed.skills?.some(
-              (skill) =>
-                cloudSkills.includes(
-                  skill
-                )
-            ) &&
-            hasCloud
-          ) {
-
-            domainScore = 1;
-
-          } else if (
-            parsed.skills?.some(
-              (skill) =>
-                aiSkills.includes(
-                  skill
-                )
-            ) &&
-            hasAI
-          ) {
-
-            domainScore = 1;
-          }
-
-          // PROJECT SCORE (15%)
-
-          let projectScore =
-            0.5;
-
-          if (
-            candidate.projects
-              ?.length
-          ) {
-
-            const projectText =
-              candidate.projects
-                .join(" ")
-                .toLowerCase();
-
-            const projectMatches =
-              parsed.skills?.filter(
-                (skill) =>
-                  projectText.includes(
-                    skill.toLowerCase()
-                  )
-              ).length || 0;
+            let skillScore =
+              0;
 
             if (
               parsed.skills
                 ?.length
             ) {
 
-              projectScore =
-                projectMatches /
-                parsed.skills.length;
-            }
+              const matchedSkills =
+  parsed.skills.filter(
+    (skill) => {
+
+      const normalizedSkill =
+        skill.toLowerCase();
+
+      return candidate.skills?.some(
+        (
+          candidateSkill
+        ) => {
+
+          const normalizedCandidateSkill =
+            candidateSkill.toLowerCase();
+
+          // DIRECT MATCH
+
+          if (
+            normalizedCandidateSkill.includes(
+              normalizedSkill
+            )
+          ) {
+
+            return true;
           }
 
-          // FINAL WEIGHTED SCORE
+          // PARTIAL MATCH
 
-          totalScore =
-            (
-              skillScore *
-                0.5 +
-              experienceScore *
-                0.2 +
-              domainScore *
-                0.15 +
-              projectScore *
-                0.15
-            ) * 100;
-
-          let matchPercentage =
-            Math.round(
-              totalScore
+          const queryWords =
+            normalizedSkill.split(
+              " "
             );
 
-          // REALISTIC SCORE CAPS
-
-          if (
-            matchPercentage > 95
-          ) {
-
-            matchPercentage =
-              95;
-          }
-
-          if (
-            matchPercentage < 35
-          ) {
-
-            matchPercentage =
-              35;
-          }
-
-          return {
-
-            ...candidate.toObject(),
-
-            matchPercentage,
-          };
+          return queryWords.some(
+            (word) =>
+              normalizedCandidateSkill.includes(
+                word
+              )
+          );
         }
       );
+    }
+  );
 
-    // SORT BEST → WORST
+              skillScore =
+                matchedSkills.length /
+                parsed.skills.length;
+            }
 
-    scoredCandidates.sort(
-      (a, b) =>
-        b.matchPercentage -
-        a.matchPercentage
-    );
+            // ================= EXPERIENCE SCORE =================
 
-    // FINAL RESPONSE
+            let experienceScore =
+              1;
 
-    res.json({
+            if (
+              parsed.experience !==
+                null &&
+              parsed.experience !==
+                undefined &&
+              !isNaN(
+                parsed.experience
+              )
+            ) {
 
-      success: true,
+              const difference =
+                parsed.experience -
+                candidate.experience;
 
-      parsed,
+              if (
+                difference <=
+                0
+              ) {
 
-      count:
-        scoredCandidates.length,
+                experienceScore =
+                  1;
 
-      candidates:
-        scoredCandidates,
-    });
+              } else if (
+                difference ===
+                1
+              ) {
 
-  } catch (err) {
+                experienceScore =
+                  0.7;
 
-    console.error(
-      "❌ SEARCH ERROR:",
-      err.message
-    );
+              } else if (
+                difference ===
+                2
+              ) {
 
-    res.status(500).json({
+                experienceScore =
+                  0.5;
 
-      success: false,
+              } else {
 
-      msg: "AI Search failed",
+                experienceScore =
+                  0.2;
+              }
+            }
 
-      error: err.message,
-    });
-  }
-};
+            // ================= PROJECT SCORE =================
+
+            let projectScore =
+              0.5;
+
+            if (
+              candidate
+                .projects
+                ?.length
+            ) {
+
+              const projectText =
+                candidate.projects
+                  .join(" ")
+                  .toLowerCase();
+
+              const projectMatches =
+                parsed.skills?.filter(
+                  (
+                    skill
+                  ) =>
+
+                    projectText.includes(
+                      skill.toLowerCase()
+                    )
+                ).length ||
+                0;
+
+              if (
+                parsed.skills
+                  ?.length
+              ) {
+
+                projectScore =
+                  projectMatches /
+                  parsed.skills.length;
+              }
+            }
+
+            // ================= SEMANTIC SCORE =================
+
+            let semanticScore =
+              0;
+
+            if (
+              candidate
+                .embedding
+                ?.length &&
+              queryEmbedding?.length
+            ) {
+
+              semanticScore =
+                cosineSimilarity(
+                  candidate.embedding,
+                  queryEmbedding
+                ) || 0;
+
+              semanticScore =
+                Math.max(
+                  0,
+                  semanticScore
+                );
+            }
+
+            // ================= FINAL WEIGHTED SCORE =================
+
+            totalScore =
+              (
+                skillScore *
+                  0.35 +
+                experienceScore *
+                  0.15 +
+                projectScore *
+                  0.10 +
+                semanticScore *
+                  0.40
+              ) *
+              100;
+
+            let matchPercentage =
+              Math.round(
+                totalScore
+              );
+
+            // ================= SCORE CAPS =================
+
+            if (
+              matchPercentage >
+              95
+            ) {
+
+              matchPercentage =
+                95;
+            }
+
+            if (
+              matchPercentage <
+              35
+            ) {
+
+              matchPercentage =
+                35;
+            }
+
+            console.log({
+
+              candidate:
+                candidate.name,
+
+              semanticScore:
+                semanticScore.toFixed(
+                  2
+                ),
+
+              matchPercentage,
+            });
+
+            return {
+
+              ...candidate.toObject(),
+
+              semanticScore:
+                Number(
+                  semanticScore.toFixed(
+                    2
+                  )
+                ),
+
+              matchPercentage,
+            };
+          }
+        );
+
+      // ================= SORT BEST → WORST =================
+
+      scoredCandidates.sort(
+        (a, b) =>
+          b.matchPercentage -
+          a.matchPercentage
+      );
+
+      // ================= RESPONSE =================
+
+      res.json({
+
+        success: true,
+
+        parsed,
+
+        count:
+          scoredCandidates.length,
+
+        candidates:
+          scoredCandidates,
+      });
+
+    } catch (err) {
+
+      console.error(
+        "❌ SEARCH ERROR:",
+        err.message
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        msg:
+          "AI Search failed",
+
+        error:
+          err.message,
+      });
+    }
+  };

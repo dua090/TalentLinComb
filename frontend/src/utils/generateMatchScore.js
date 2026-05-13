@@ -32,20 +32,20 @@ const generateMatchScore = ({
 
     const matchedSkills =
       normalizedSelectedSkills.filter(
-        (skill) =>
-          normalizedProfileSkills.includes(
-            skill
+        (selectedSkill) =>
+
+          normalizedProfileSkills.some(
+            (profileSkill) =>
+
+              profileSkill.includes(
+                selectedSkill
+              ) ||
+
+              selectedSkill.includes(
+                profileSkill
+              )
           )
       ).length;
-
-    if (
-      matchedSkills ===
-        normalizedSelectedSkills.length &&
-      normalizedSelectedSkills.length > 0
-    ) {
-
-      return 100;
-    }
 
     score +=
       (
@@ -64,13 +64,21 @@ const generateMatchScore = ({
     search.trim()
   ) {
 
+    const normalizedSearch =
+      search
+        .toLowerCase()
+        .trim();
+
     const hasSearchMatch =
       normalizedProfileSkills.some(
         (skill) =>
+
           skill.includes(
-            search
-              .toLowerCase()
-              .trim()
+            normalizedSearch
+          ) ||
+
+          normalizedSearch.includes(
+            skill
           )
       );
 
@@ -122,9 +130,18 @@ const generateMatchScore = ({
 
     const hasDomainMatch =
       normalizedProfileSkills.some(
-        (skill) =>
-          normalizedDomainSkills.includes(
-            skill
+        (profileSkill) =>
+
+          normalizedDomainSkills.some(
+            (domainSkill) =>
+
+              profileSkill.includes(
+                domainSkill
+              ) ||
+
+              domainSkill.includes(
+                profileSkill
+              )
           )
       );
 
