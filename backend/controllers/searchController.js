@@ -198,51 +198,44 @@ years experience
 
             // ================= EXPERIENCE SCORE =================
 
-            let experienceScore =
-              1;
+            let experienceScore = 1;
 
             if (
-              parsed.experience !==
-                null &&
-              parsed.experience !==
-                undefined &&
-              !isNaN(
-                parsed.experience
-              )
+              parsed.experience !== null &&
+              parsed.experience !== undefined &&
+              !isNaN(parsed.experience)
             ) {
 
-              const difference =
-                parsed.experience -
-                candidate.experience;
+              const requiredExp =
+                Number(parsed.experience);
+
+              const candidateExp =
+                Number(candidate.experience);
+
+              // ================= EXACT OR HIGHER =================
 
               if (
-                difference <=
-                0
+                candidateExp >= requiredExp
               ) {
 
-                experienceScore =
-                  1;
+                experienceScore = 1;
+              }
 
-              } else if (
-                difference ===
-                1
+              // ================= 1 YEAR LESS =================
+
+              else if (
+                candidateExp ===
+                requiredExp - 1
               ) {
 
-                experienceScore =
-                  0.7;
+                experienceScore = 0.4;
+              }
 
-              } else if (
-                difference ===
-                2
-              ) {
+              // ================= 2+ YEARS LESS =================
 
-                experienceScore =
-                  0.5;
+              else {
 
-              } else {
-
-                experienceScore =
-                  0.2;
+                experienceScore = 0.05;
               }
             }
 

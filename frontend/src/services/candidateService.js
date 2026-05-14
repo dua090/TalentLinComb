@@ -79,3 +79,37 @@ export const createManualCandidate =
 
     return data;
   };
+
+  export const toggleBookmark =
+  async ({
+    candidateId,
+    token,
+  }) => {
+
+    const response =
+      await fetch(
+
+        `${import.meta.env.VITE_API_URL}/api/candidates/${candidateId}/bookmark`,
+
+        {
+          method: "PATCH",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.msg ||
+          "Bookmark failed"
+      );
+    }
+
+    return data;
+  };

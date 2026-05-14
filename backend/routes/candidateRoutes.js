@@ -7,6 +7,7 @@ const {
   searchCandidates,
   getCandidates,
   addCandidateManual,
+  toggleBookmark,
 } = require("../controllers/candidateController");
 
 const upload = multer({ dest: "uploads/" });
@@ -16,5 +17,9 @@ router.post("/manual", auth, addCandidateManual);
 router.get("/search", auth, searchCandidates);
 router.post("/smart-search", auth, smartSearch);
 router.get("/", auth, getCandidates);
+router.patch(
+  "/:id/bookmark",
+  toggleBookmark
+);
 
 module.exports = router;

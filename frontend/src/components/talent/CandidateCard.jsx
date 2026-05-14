@@ -1,7 +1,20 @@
 import {
   Sparkles,
   UserRound,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
+
+import {
+  useState,
+  useEffect,
+} from "react";
+
+import {
+  toggleBookmark,
+} from "../../services/candidateService";
+
+import toast from "react-hot-toast";
 
 const CandidateCard = ({
   profile,
@@ -11,6 +24,9 @@ const CandidateCard = ({
   domainFilter,
   generateMatchScore,
   setSelectedCandidate,
+
+  // ================= NEW PROP =================
+  updateBookmarkState,
 }) => {
 
   const matchScore =
@@ -18,6 +34,94 @@ const CandidateCard = ({
 
   const isAIProfile =
     profile.source === "ai";
+
+// ================= LOCAL BOOKMARK STATE =================
+
+  const [
+    isBookmarked,
+    setIsBookmarked,
+  ] = useState(
+    profile.isBookmarked
+  );
+
+// ================= SYNC BOOKMARK =================
+
+  useEffect(() => {
+
+    setIsBookmarked(
+      profile.isBookmarked
+    );
+
+  }, [profile.isBookmarked]);
+
+  // ================= USER TOKEN =================
+
+  const storedUser =
+    JSON.parse(
+      localStorage.getItem("user")
+    );
+
+  const token =
+    storedUser?.token;
+
+  // ================= BOOKMARK =================
+
+  const handleBookmark =
+    async () => {
+
+      try {
+
+        const response =
+          await toggleBookmark({
+
+            candidateId:
+              profile._id,
+
+            token,
+          });
+
+        // ================= UPDATED VALUE =================
+
+        const updatedBookmark =
+          response.candidate
+            .isBookmarked;
+
+        // ================= LOCAL UPDATE =================
+
+        setIsBookmarked(
+          updatedBookmark
+        );
+
+        // ================= PARENT UPDATE =================
+
+        updateBookmarkState(
+          profile._id,
+          updatedBookmark
+        );
+
+        // ================= TOAST =================
+
+        toast.success(
+
+          updatedBookmark
+
+            ? "Candidate bookmarked successfully"
+
+            : "Bookmark removed"
+        );
+
+      } catch (error) {
+
+        console.error(
+          "BOOKMARK ERROR:",
+          error
+        );
+
+        toast.error(
+          "Bookmark update failed"
+        );
+      }
+    };
 
   return (
 
@@ -27,11 +131,11 @@ const CandidateCard = ({
 
       <div className="flex items-start justify-between mb-5">
 
-        {/* LEFT */}
+        {/* ================= LEFT ================= */}
 
         <div className="flex items-center gap-4">
 
-          {/* AVATAR */}
+          {/* ================= AVATAR ================= */}
 
           <div className="relative">
 
@@ -50,11 +154,9 @@ const CandidateCard = ({
             />
           </div>
 
-          {/* INFO */}
+          {/* ================= INFO ================= */}
 
           <div>
-
-            {/* CLICKABLE NAME */}
 
             <button
               onClick={() =>
@@ -71,10 +173,12 @@ const CandidateCard = ({
             </button>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
+
               {profile.experience || 0} years experience
+
             </p>
 
-            {/* PROFILE SOURCE */}
+            {/* ================= PROFILE SOURCE ================= */}
 
             <div className="mt-2">
 
@@ -102,26 +206,56 @@ const CandidateCard = ({
           </div>
         </div>
 
-        {/* MATCH SCORE */}
+        {/* ================= RIGHT SECTION ================= */}
 
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-end gap-3">
 
-          <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mb-1">
+          {/* ================= BOOKMARK ================= */}
 
-            {selectedSkills.length > 0 ||
-            search ||
-            domainFilter !== "All"
+          <button
+            onClick={
+              handleBookmark
+            }
+            className="flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          >
 
-              ? "Match Score"
+            {isBookmarked ? (
 
-              : "Profile Strength"}
+              <BookmarkCheck
+                size={20}
+                className="text-yellow-500 fill-yellow-500"
+              />
 
-          </span>
+            ) : (
 
-          <div className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold shadow-sm">
+              <Bookmark
+                size={20}
+                className="text-gray-400 dark:text-gray-500"
+              />
+            )}
+          </button>
 
-            {matchScore}%
+          {/* ================= MATCH SCORE ================= */}
 
+          <div className="flex flex-col items-end">
+
+            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mb-1">
+
+              {selectedSkills.length > 0 ||
+              search ||
+              domainFilter !== "All"
+
+                ? "Match Score"
+
+                : "Profile Strength"}
+
+            </span>
+
+            <div className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold shadow-sm">
+
+              {matchScore}%
+
+            </div>
           </div>
         </div>
       </div>
@@ -131,7 +265,9 @@ const CandidateCard = ({
       <div className="mb-5">
 
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+
           Skills
+
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -144,7 +280,9 @@ const CandidateCard = ({
                 key={i}
                 className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-md"
               >
+
                 {skill}
+
               </span>
             ))}
 
@@ -169,7 +307,9 @@ const CandidateCard = ({
       <div className="mt-auto">
 
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+
           Projects
+
         </p>
 
         <ul className="space-y-2">
@@ -182,7 +322,9 @@ const CandidateCard = ({
                 key={i}
                 className="text-sm text-gray-600 dark:text-gray-400"
               >
+
                 • {project}
+
               </li>
             ))}
 

@@ -60,6 +60,10 @@ const candidateSchema = new mongoose.Schema(
       default: "ai",
       required: true,
     },
+    isBookmarked: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -518,3 +518,54 @@ exports.getCandidates =
       });
     }
   };
+
+  exports.toggleBookmark =
+  async (req, res) => {
+
+    try {
+
+      const candidate =
+        await Candidate.findById(
+          req.params.id
+        );
+
+      if (!candidate) {
+
+        return res
+          .status(404)
+          .json({
+            success: false,
+            msg: "Candidate not found",
+          });
+      }
+
+      candidate.isBookmarked =
+        !candidate.isBookmarked;
+
+      await candidate.save();
+
+      res.json({
+
+        success: true,
+
+        isBookmarked:
+          candidate.isBookmarked,
+
+        candidate,
+      });
+
+    } catch (error) {
+
+      console.error(
+        "BOOKMARK ERROR:",
+        error
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        msg: "Bookmark update failed",
+      });
+    }
+  };
