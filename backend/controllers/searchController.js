@@ -7,15 +7,16 @@ const {
   "@google/generative-ai"
 );
 
-const cosineSimilarity =
-  require(
-    "cosine-similarity"
-  );
-
 const {
   generateEmbedding,
 } = require(
   "../services/embeddingService"
+);
+
+const {
+  calculateCandidateRanking,
+} = require(
+  "../utils/rankingEngine"
 );
 
 const genAI =
@@ -32,11 +33,14 @@ exports.smartSearch =
       const { prompt } =
         req.body;
 
+      // ================= VALIDATION =================
+
       if (!prompt) {
 
         return res
           .status(400)
           .json({
+
             msg:
               "Prompt is required",
           });
@@ -56,19 +60,22 @@ exports.smartSearch =
         await model.generateContent(`
 You are an AI recruiter assistant.
 
-Extract structured data from the query below.
+Extract structured data from the recruiter query below.
 
 Rules:
-- Always return JSON
+- Always return valid JSON only
 - Skills must be array
-- If experience not mentioned → null
+- Experience must be number or null
+- Extract technical skills only
+- Remove unnecessary words like developer, engineer, expert, candidate, etc.
 
-Query: "${prompt}"
+Recruiter Query:
+"${prompt}"
 
-Return:
+Return Format:
 {
   "skills": ["React"],
-  "experience": 2
+  "experience": 3
 }
 `);
 
@@ -116,17 +123,27 @@ years experience
 
 `;
 
+      console.log(
+        "Generating embedding..."
+      );
+
       const queryEmbedding =
         await generateEmbedding(
           semanticQuery
         );
 
+      console.log(
+        "Embedding generated successfully"
+      );
+
       // ================= FETCH ALL CANDIDATES =================
 
       const candidates =
-        await Candidate.find({});
+        await Candidate.find(
+          {}
+        );
 
-      // ================= SCORING =================
+      // ================= AI RANKING ENGINE =================
 
       const scoredCandidates =
         candidates.map(
@@ -134,214 +151,16 @@ years experience
             candidate
           ) => {
 
-            let totalScore =
-              0;
+            const ranking =
+              calculateCandidateRanking({
 
-            // ================= SKILL SCORE =================
+                candidate,
 
-            let skillScore =
-              0;
+                parsedQuery:
+                  parsed,
 
-            if (
-              parsed.skills
-                ?.length
-            ) {
-
-              const matchedSkills =
-  parsed.skills.filter(
-    (skill) => {
-
-      const normalizedSkill =
-        skill.toLowerCase();
-
-      return candidate.skills?.some(
-        (
-          candidateSkill
-        ) => {
-
-          const normalizedCandidateSkill =
-            candidateSkill.toLowerCase();
-
-          // DIRECT MATCH
-
-          if (
-            normalizedCandidateSkill.includes(
-              normalizedSkill
-            )
-          ) {
-
-            return true;
-          }
-
-          // PARTIAL MATCH
-
-          const queryWords =
-            normalizedSkill.split(
-              " "
-            );
-
-          return queryWords.some(
-            (word) =>
-              normalizedCandidateSkill.includes(
-                word
-              )
-          );
-        }
-      );
-    }
-  );
-
-              skillScore =
-                matchedSkills.length /
-                parsed.skills.length;
-            }
-
-            // ================= EXPERIENCE SCORE =================
-
-            let experienceScore = 1;
-
-            if (
-              parsed.experience !== null &&
-              parsed.experience !== undefined &&
-              !isNaN(parsed.experience)
-            ) {
-
-              const requiredExp =
-                Number(parsed.experience);
-
-              const candidateExp =
-                Number(candidate.experience);
-
-              // ================= EXACT OR HIGHER =================
-
-              if (
-                candidateExp >= requiredExp
-              ) {
-
-                experienceScore = 1;
-              }
-
-              // ================= 1 YEAR LESS =================
-
-              else if (
-                candidateExp ===
-                requiredExp - 1
-              ) {
-
-                experienceScore = 0.4;
-              }
-
-              // ================= 2+ YEARS LESS =================
-
-              else {
-
-                experienceScore = 0.05;
-              }
-            }
-
-            // ================= PROJECT SCORE =================
-
-            let projectScore =
-              0.5;
-
-            if (
-              candidate
-                .projects
-                ?.length
-            ) {
-
-              const projectText =
-                candidate.projects
-                  .join(" ")
-                  .toLowerCase();
-
-              const projectMatches =
-                parsed.skills?.filter(
-                  (
-                    skill
-                  ) =>
-
-                    projectText.includes(
-                      skill.toLowerCase()
-                    )
-                ).length ||
-                0;
-
-              if (
-                parsed.skills
-                  ?.length
-              ) {
-
-                projectScore =
-                  projectMatches /
-                  parsed.skills.length;
-              }
-            }
-
-            // ================= SEMANTIC SCORE =================
-
-            let semanticScore =
-              0;
-
-            if (
-              candidate
-                .embedding
-                ?.length &&
-              queryEmbedding?.length
-            ) {
-
-              semanticScore =
-                cosineSimilarity(
-                  candidate.embedding,
-                  queryEmbedding
-                ) || 0;
-
-              semanticScore =
-                Math.max(
-                  0,
-                  semanticScore
-                );
-            }
-
-            // ================= FINAL WEIGHTED SCORE =================
-
-            totalScore =
-              (
-                skillScore *
-                  0.35 +
-                experienceScore *
-                  0.15 +
-                projectScore *
-                  0.10 +
-                semanticScore *
-                  0.40
-              ) *
-              100;
-
-            let matchPercentage =
-              Math.round(
-                totalScore
-              );
-
-            // ================= SCORE CAPS =================
-
-            if (
-              matchPercentage >
-              95
-            ) {
-
-              matchPercentage =
-                95;
-            }
-
-            if (
-              matchPercentage <
-              35
-            ) {
-
-              matchPercentage =
-                35;
-            }
+                queryEmbedding,
+              });
 
             console.log({
 
@@ -349,11 +168,10 @@ years experience
                 candidate.name,
 
               semanticScore:
-                semanticScore.toFixed(
-                  2
-                ),
+                ranking.semanticScore,
 
-              matchPercentage,
+              matchPercentage:
+                ranking.matchPercentage,
             });
 
             return {
@@ -362,12 +180,29 @@ years experience
 
               semanticScore:
                 Number(
-                  semanticScore.toFixed(
-                    2
-                  )
+                  ranking.semanticScore
                 ),
 
-              matchPercentage,
+              skillScore:
+                Number(
+                  ranking.skillScore
+                ),
+
+              experienceScore:
+                Number(
+                  ranking.experienceScore
+                ),
+
+              projectScore:
+                Number(
+                  ranking.projectScore
+                ),
+
+              matchPercentage:
+                ranking.matchPercentage,
+
+              rankingReasons:
+                ranking.rankingReasons,
             };
           }
         );
@@ -386,7 +221,13 @@ years experience
 
         success: true,
 
-        parsed,
+        parsed: {
+
+          ...parsed,
+
+          originalQuery:
+            prompt,
+        },
 
         count:
           scoredCandidates.length,

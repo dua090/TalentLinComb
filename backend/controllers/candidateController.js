@@ -284,20 +284,7 @@ years experience
 
           source: "ai",
         });
-
-      // DELETE FILE
-
-      if (
-        fs.existsSync(
-          filePath
-        )
-      ) {
-
-        fs.unlinkSync(
-          filePath
-        );
-      }
-
+        
       // RESPONSE
 
       res.status(201).json({
