@@ -1,71 +1,174 @@
-const mongoose = require("mongoose");
+const mongoose =
+  require("mongoose");
 
-const candidateSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
+// ================= CANDIDATE SCHEMA =================
+
+const candidateSchema =
+  new mongoose.Schema(
+
+    {
+      // ================= BASIC INFO =================
+
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      email: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+      },
+
+      phone: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+
+      // ================= SKILLS =================
+
+      skills: {
+        type: [String],
+        required: true,
+        default: [],
+      },
+
+      // ================= EXPERIENCE =================
+
+      experience: {
+        type: Number,
+        required: true,
+        default: 0,
+      },
+
+      // ================= EDUCATION =================
+
+      education: {
+        type: [String],
+        default: [],
+      },
+
+      // ================= PROJECTS =================
+
+      projects: {
+        type: [String],
+        default: [],
+      },
+
+      // ================= RESUME =================
+
+      resumeUrl: {
+        type: String,
+        default: "",
+      },
+
+      // ================= VECTOR EMBEDDING =================
+
+      embedding: {
+        type: [Number],
+        default: [],
+      },
+
+      // ================= SOURCE =================
+
+      source: {
+        type: String,
+
+        enum: [
+          "ai",
+          "manual",
+        ],
+
+        default: "ai",
+
+        required: true,
+      },
+
+      // ================= BOOKMARK =================
+
+      isBookmarked: {
+        type: Boolean,
+        default: false,
+      },
+
+      // ================= MULTI TENANCY =================
+
+      organizationId: {
+
+        type:
+          mongoose.Schema.Types.ObjectId,
+
+        ref:
+          "Organization",
+
+        required: true,
+
+        index: true,
+      },
+
+      // ================= FUTURE WORKFORCE AI =================
+
+      availabilityStatus: {
+
+        type: String,
+
+        enum: [
+          "available",
+          "partially_available",
+          "busy",
+        ],
+
+        default:
+          "available",
+      },
+
+      currentAllocation: {
+
+        type: Number,
+
+        default: 0,
+      },
     },
 
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true,
-    },
+    {
+      timestamps: true,
+    }
+  );
 
-    phone: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+// ================= INDEXES =================
 
-    skills: {
-      type: [String],
-      required: true,
-      default: [],
-    },
+// MULTI-TENANT SEARCH OPTIMIZATION
 
-    experience: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
+candidateSchema.index({
 
-    education: {
-      type: Array,
-      default: [],
-    },
+  organizationId: 1,
 
-    projects: {
-      type: Array,
-      default: [],
-    },
+  createdAt: -1,
+});
 
-    resumeUrl: {
-      type: String,
-      default: "",
-    },
+// SKILL SEARCH OPTIMIZATION
 
-    embedding: {
-    type: [Number],
-    default: [],
-  },
+candidateSchema.index({
 
-    // REQUIRED SOURCE
-    source: {
-      type: String,
-      enum: ["ai", "manual"],
-      default: "ai",
-      required: true,
-    },
-    isBookmarked: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  { timestamps: true }
-);
+  skills: 1,
+});
 
-module.exports = mongoose.model("Candidate", candidateSchema);
+// EXPERIENCE FILTERING
+
+candidateSchema.index({
+
+  experience: 1,
+});
+
+// ================= EXPORT =================
+
+module.exports =
+  mongoose.model(
+
+    "Candidate",
+
+    candidateSchema
+  );

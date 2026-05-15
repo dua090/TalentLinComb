@@ -11,6 +11,7 @@ import {
 import {
   Moon,
   Sun,
+  Building2,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -21,16 +22,23 @@ export default function Signup() {
 
   const { signup } = useAuth();
 
-  const navigate = useNavigate();
+  const navigate =
+    useNavigate();
 
   const [darkMode, setDarkMode] =
     useState(false);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [form, setForm] =
+    useState({
+
+      name: "",
+
+      email: "",
+
+      companyName: "",
+
+      password: "",
+    });
 
   const [errors, setErrors] =
     useState({});
@@ -75,6 +83,8 @@ export default function Signup() {
 
     const newErrors = {};
 
+    // ================= NAME =================
+
     if (!form.name.trim()) {
 
       newErrors.name =
@@ -88,6 +98,8 @@ export default function Signup() {
       newErrors.name =
         "Name must be at least 3 characters";
     }
+
+    // ================= EMAIL =================
 
     if (!form.email.trim()) {
 
@@ -104,6 +116,28 @@ export default function Signup() {
       newErrors.email =
         "Invalid email address";
     }
+
+    // ================= COMPANY =================
+
+    if (
+      !form.companyName.trim()
+    ) {
+
+      newErrors.companyName =
+        "Company name is required";
+    }
+
+    else if (
+      form.companyName
+        .trim()
+        .length < 2
+    ) {
+
+      newErrors.companyName =
+        "Company name must be at least 2 characters";
+    }
+
+    // ================= PASSWORD =================
 
     if (!form.password.trim()) {
 
@@ -122,54 +156,70 @@ export default function Signup() {
     setErrors(newErrors);
 
     return (
-      Object.keys(newErrors).length === 0
+      Object.keys(
+        newErrors
+      ).length === 0
     );
   };
 
   // ================= SUBMIT =================
 
-  const handleSubmit = async (e) => {
+  const handleSubmit =
+    async (e) => {
 
-    e.preventDefault();
+      e.preventDefault();
 
-    if (!validateForm()) return;
+      if (
+        !validateForm()
+      ) return;
 
-    try {
+      try {
 
-      setLoading(true);
+        setLoading(true);
 
-      await signup(
-        form.name,
-        form.email,
-        form.password
-      );
+        await signup({
 
-      alert("Signup successful");
+          name:
+            form.name,
 
-      navigate("/");
+          email:
+            form.email,
 
-    } catch (err) {
+          companyName:
+            form.companyName,
 
-      alert(
-        err.message ||
-        "Signup failed"
-      );
+          password:
+            form.password,
+        });
 
-    } finally {
+        navigate("/home");
 
-      setLoading(false);
-    }
-  };
+      } catch (err) {
+
+        alert(
+
+          err.message ||
+
+          "Signup failed"
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
+    };
 
   return (
 
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F9FAFB] dark:bg-gray-950 px-4 transition-colors duration-300">
 
-      {/* THEME TOGGLE */}
+      {/* ================= THEME TOGGLE ================= */}
 
       <button
         onClick={() =>
-          setDarkMode(!darkMode)
+          setDarkMode(
+            !darkMode
+          )
         }
         className="
         absolute top-6 right-6
@@ -182,22 +232,25 @@ export default function Signup() {
       "
       >
 
-        {darkMode
-          ? (
-            <Sun className="text-yellow-400" />
-          )
-          : (
-            <Moon className="text-gray-700" />
-          )}
+        {darkMode ? (
+
+          <Sun className="text-yellow-400" />
+
+        ) : (
+
+          <Moon className="text-gray-700" />
+        )}
       </button>
 
-      {/* LOGO */}
+      {/* ================= LOGO ================= */}
 
       <div className="mb-8">
+
         <TalentLinkLogo className="w-72" />
+
       </div>
 
-      {/* CARD */}
+      {/* ================= CARD ================= */}
 
       <form
         onSubmit={handleSubmit}
@@ -212,23 +265,31 @@ export default function Signup() {
       "
       >
 
+        {/* ================= HEADING ================= */}
+
         <div className="text-center mb-8">
 
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Create Account
+
+            Create Organization
+
           </h2>
 
           <p className="text-gray-500 dark:text-gray-400 mt-2">
-            Join TalentLink and discover top talent
+
+            Build your AI-powered workforce platform
+
           </p>
         </div>
 
-        {/* NAME */}
+        {/* ================= NAME ================= */}
 
         <div className="mb-5">
 
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
             Full Name
+
           </label>
 
           <input
@@ -237,8 +298,11 @@ export default function Signup() {
             value={form.name}
             onChange={(e) =>
               setForm({
+
                 ...form,
-                name: e.target.value,
+
+                name:
+                  e.target.value,
               })
             }
             className="
@@ -253,18 +317,23 @@ export default function Signup() {
           />
 
           {errors.name && (
+
             <p className="text-red-500 text-sm mt-2">
+
               {errors.name}
+
             </p>
           )}
         </div>
 
-        {/* EMAIL */}
+        {/* ================= EMAIL ================= */}
 
         <div className="mb-5">
 
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
             Email
+
           </label>
 
           <input
@@ -273,8 +342,11 @@ export default function Signup() {
             value={form.email}
             onChange={(e) =>
               setForm({
+
                 ...form,
-                email: e.target.value,
+
+                email:
+                  e.target.value,
               })
             }
             className="
@@ -289,18 +361,77 @@ export default function Signup() {
           />
 
           {errors.email && (
+
             <p className="text-red-500 text-sm mt-2">
+
               {errors.email}
+
             </p>
           )}
         </div>
 
-        {/* PASSWORD */}
+        {/* ================= COMPANY ================= */}
+
+        <div className="mb-5">
+
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
+            Company Name
+
+          </label>
+
+          <div className="relative">
+
+            <Building2
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Google, Amazon..."
+              value={
+                form.companyName
+              }
+              onChange={(e) =>
+                setForm({
+
+                  ...form,
+
+                  companyName:
+                    e.target.value,
+                })
+              }
+              className="
+              w-full pl-11 pr-4 py-3 rounded-xl
+              border border-gray-200 dark:border-gray-700
+              bg-gray-50 dark:bg-gray-800
+              text-gray-900 dark:text-white
+              outline-none
+              focus:border-blue-500
+              transition
+            "
+            />
+          </div>
+
+          {errors.companyName && (
+
+            <p className="text-red-500 text-sm mt-2">
+
+              {errors.companyName}
+
+            </p>
+          )}
+        </div>
+
+        {/* ================= PASSWORD ================= */}
 
         <div className="mb-6">
 
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+
             Password
+
           </label>
 
           <input
@@ -309,8 +440,11 @@ export default function Signup() {
             value={form.password}
             onChange={(e) =>
               setForm({
+
                 ...form,
-                password: e.target.value,
+
+                password:
+                  e.target.value,
               })
             }
             className="
@@ -325,13 +459,16 @@ export default function Signup() {
           />
 
           {errors.password && (
+
             <p className="text-red-500 text-sm mt-2">
+
               {errors.password}
+
             </p>
           )}
         </div>
 
-        {/* BUTTON */}
+        {/* ================= BUTTON ================= */}
 
         <button
           disabled={loading}
@@ -342,12 +479,15 @@ export default function Signup() {
           font-semibold transition shadow-sm
         "
         >
+
           {loading
-            ? "Creating Account..."
+
+            ? "Creating Organization..."
+
             : "Create Account"}
         </button>
 
-        {/* FOOTER */}
+        {/* ================= FOOTER ================= */}
 
         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
 
@@ -357,7 +497,9 @@ export default function Signup() {
             to="/"
             className="text-blue-600 font-medium hover:text-blue-700"
           >
+
             Login
+
           </Link>
         </p>
       </form>

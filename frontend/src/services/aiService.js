@@ -1,25 +1,82 @@
 import axios from "axios";
 
-const API =
-  import.meta.env
-    .VITE_API_URL;
+// ================= API BASE =================
+
+const API_BASE_URL =
+
+  `${import.meta.env.VITE_API_URL}/api/ai`;
+
+// ================= AXIOS INSTANCE =================
+
+const aiAPI =
+  axios.create({
+
+    baseURL:
+      API_BASE_URL,
+  });
+
+// ================= AUTH HEADERS =================
+
+const getAuthHeaders =
+  (token) => ({
+
+    headers: {
+
+      Authorization:
+        `Bearer ${token}`,
+    },
+  });
+
+// ======================================================
+// ================= CANDIDATE SUMMARY ==================
+// ======================================================
 
 export const getCandidateSummary =
   async ({
+
     candidate,
+
     recruiterQuery,
+
+    token,
   }) => {
 
-    const response =
-      await axios.post(
+    try {
 
-        `${API}/api/ai/candidate-summary`,
+      const response =
+        await aiAPI.post(
 
-        {
-          candidate,
-          recruiterQuery,
-        }
+          "/candidate-summary",
+
+          {
+
+            candidate,
+
+            recruiterQuery,
+          },
+
+          getAuthHeaders(
+            token
+          )
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      console.error(
+
+        "AI SUMMARY ERROR:",
+
+        error
       );
 
-    return response.data;
+      throw new Error(
+
+        error?.response?.data
+          ?.message ||
+
+        "Failed to generate AI summary"
+      );
+    }
   };

@@ -1,58 +1,95 @@
+const API_BASE_URL =
+
+  `${import.meta.env.VITE_API_URL}/api/candidates`;
+
+// ======================================================
+// ================= AUTH HEADERS =======================
+// ======================================================
+
+const getAuthHeaders =
+  (token) => ({
+
+    "Content-Type":
+      "application/json",
+
+    Authorization:
+      `Bearer ${token}`,
+  });
+
+// ======================================================
+// ================= HANDLE RESPONSE ====================
+// ======================================================
+
+const handleResponse =
+  async (response) => {
+
+    const data =
+      await response.json();
+
+    // ======================================================
+    // ================= ERROR ==============================
+    // ======================================================
+
+    if (!response.ok) {
+
+      throw new Error(
+
+        data.msg ||
+
+        data.message ||
+
+        "Request failed"
+      );
+    }
+
+    return data;
+  };
+
+// ======================================================
+// ================= SMART SEARCH =======================
+// ======================================================
+
 export const smartSearch =
-  async (query) => {
+  async ({
+
+    prompt,
+
+    token,
+  }) => {
 
     try {
 
-      const storedUser =
-        JSON.parse(
-          localStorage.getItem(
-            "user"
-          )
-        );
-
-      const token =
-        storedUser?.token;
-
-      const res =
+      const response =
         await fetch(
 
-          `${import.meta.env.VITE_API_URL}/api/search/smart-search`,
+          `${API_BASE_URL}/smart-search`,
 
           {
             method: "POST",
 
-            headers: {
+            headers:
+              getAuthHeaders(
+                token
+              ),
 
-              "Content-Type":
-                "application/json",
+            body:
+              JSON.stringify({
 
-              Authorization:
-                `Bearer ${token}`,
-            },
-
-            body: JSON.stringify({
-              prompt: query,
-            }),
+                prompt,
+              }),
           }
         );
 
-      const data =
-        await res.json();
-
-      if (!res.ok) {
-
-        throw new Error(
-          data.msg ||
-          "Search failed"
-        );
-      }
-
-      return data;
+      return handleResponse(
+        response
+      );
 
     } catch (err) {
 
       console.error(
+
         "SMART SEARCH ERROR:",
+
         err
       );
 

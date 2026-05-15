@@ -1,21 +1,167 @@
-const jwt = require("jsonwebtoken");
+const jwt =
+  require("jsonwebtoken");
 
-module.exports = (req, res, next) => {
-  let token = req.headers.authorization;
+const User =
+  require("../models/User");
 
-  if (!token) return res.status(401).json({ msg: "No token" });
+// ======================================================
+// ================= AUTH MIDDLEWARE ====================
+// ======================================================
 
-  // 🔥 REMOVE "Bearer "
-  if (token.startsWith("Bearer ")) {
-    token = token.slice(7);
-  }
+module.exports =
+  async (
+    req,
+    res,
+    next
+  ) => {
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.log(err); // helpful debug
-    res.status(401).json({ msg: "Invalid token" });
-  }
-};
+    try {
+
+      // ======================================================
+      // ================= GET TOKEN ==========================
+      // ======================================================
+
+      let token =
+        req.headers.authorization;
+
+      // ======================================================
+      // ================= NO TOKEN ===========================
+      // ======================================================
+
+      if (!token) {
+
+        return res
+          .status(401)
+          .json({
+
+            success: false,
+
+            message:
+              "No token provided",
+          });
+      }
+
+      // ======================================================
+      // ================= REMOVE BEARER ======================
+      // ======================================================
+
+      if (
+
+        token.startsWith(
+          "Bearer "
+        )
+
+      ) {
+
+        token =
+          token.slice(7);
+      }
+
+      // ======================================================
+      // ================= VERIFY TOKEN =======================
+      // ======================================================
+
+      const decoded =
+        jwt.verify(
+
+          token,
+
+          process.env.JWT_SECRET
+        );
+
+      // ======================================================
+      // ================= FIND USER ==========================
+      // ======================================================
+
+      const user =
+        await User.findById(
+          decoded.id
+        )
+
+        .select("-password");
+
+      // ======================================================
+      // ================= USER NOT FOUND =====================
+      // ======================================================
+
+      if (!user) {
+
+        return res
+          .status(401)
+          .json({
+
+            success: false,
+
+            message:
+              "User not found",
+          });
+      }
+
+      // ======================================================
+      // ================= INACTIVE USER ======================
+      // ======================================================
+
+      if (!user.isActive) {
+
+        return res
+          .status(403)
+          .json({
+
+            success: false,
+
+            message:
+              "Account is inactive",
+          });
+      }
+
+      // ======================================================
+      // ================= ATTACH USER ========================
+      // ======================================================
+
+      req.user = {
+
+        id:
+          user._id,
+
+        role:
+          user.role,
+
+        organizationId:
+          user.organizationId,
+
+        permissions:
+          user.permissions || [],
+
+        email:
+          user.email,
+
+        name:
+          user.name,
+      };
+
+      // ======================================================
+      // ================= NEXT ===============================
+      // ======================================================
+
+      next();
+
+    } catch (err) {
+
+      console.error(
+
+        "AUTH ERROR:",
+
+        err.message
+      );
+
+      return res
+        .status(401)
+        .json({
+
+          success: false,
+
+          message:
+            "Invalid or expired token",
+        });
+    }
+  };

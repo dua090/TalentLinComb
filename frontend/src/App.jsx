@@ -1,22 +1,38 @@
 import {
+
   BrowserRouter,
+
   Navigate,
+
   Route,
+
   Routes,
+
 } from "react-router-dom";
 
 import {
+
   useEffect,
+
   useState,
+
 } from "react";
 
 import {
   Menu,
 } from "lucide-react";
 
+// ======================================================
+// ================= AUTH ===============================
+// ======================================================
+
 import {
   useAuth,
 } from "./context/AuthContext";
+
+// ======================================================
+// ================= COMPONENTS =========================
+// ======================================================
 
 import Sidebar from "./components/Sidebar";
 
@@ -24,45 +40,124 @@ import {
   TalentLinkLogo,
 } from "./components/TalentLinkLogo";
 
+// ======================================================
+// ================= PAGES ==============================
+// ======================================================
+
 import Home from "./pages/Home";
+
 import Insights from "./pages/Insights";
+
 import Login from "./pages/Login";
+
 import Signup from "./pages/Signup";
+
 import TalentPool from "./pages/TalentPool";
+
 import UploadProfile from "./pages/UploadProfile";
 
-// ================= PROTECTED ROUTE =================
+import UserManagement from "./pages/UserManagement";
+
+// ======================================================
+// ================= PROTECTED ROUTE ====================
+// ======================================================
 
 const ProtectedRoute = ({
+
   children,
+
+  requiredPermission,
 }) => {
 
   const { user } =
     useAuth();
 
-  return user
-    ? children
-    : <Navigate to="/" />;
+  // ======================================================
+  // ================= NO USER ============================
+  // ======================================================
+
+  if (!user) {
+
+    return (
+
+      <Navigate
+        to="/"
+        replace
+      />
+    );
+  }
+
+  // ======================================================
+  // ================= USER PERMISSIONS ==================
+  // ======================================================
+
+  const permissions =
+
+    user?.user
+      ?.permissions || [];
+
+  // ======================================================
+  // ================= PERMISSION CHECK ==================
+  // ======================================================
+
+  if (
+
+    requiredPermission &&
+
+    !permissions.includes(
+      requiredPermission
+    )
+
+  ) {
+
+    return (
+
+      <Navigate
+        to="/home"
+        replace
+      />
+    );
+  }
+
+  return children;
 };
 
-// ================= APP =================
+// ======================================================
+// ================= APP ================================
+// ======================================================
 
 function App() {
+
+  // ======================================================
+  // ================= AUTH ===============================
+  // ======================================================
 
   const { user } =
     useAuth();
 
+  // ======================================================
+  // ================= SIDEBAR ============================
+  // ======================================================
+
   const [
+
     isSidebarOpen,
+
     setIsSidebarOpen,
+
   ] = useState(true);
 
   const [
+
     isMobile,
+
     setIsMobile,
+
   ] = useState(false);
 
-  // ================= RESPONSIVE =================
+  // ======================================================
+  // ================= RESPONSIVE =========================
+  // ======================================================
 
   useEffect(() => {
 
@@ -70,9 +165,12 @@ function App() {
       () => {
 
         const mobile =
+
           window.innerWidth < 768;
 
-        setIsMobile(mobile);
+        setIsMobile(
+          mobile
+        );
 
         setIsSidebarOpen(
           !mobile
@@ -82,23 +180,30 @@ function App() {
     handleResize();
 
     window.addEventListener(
+
       "resize",
+
       handleResize
     );
 
     return () => {
 
       window.removeEventListener(
+
         "resize",
+
         handleResize
       );
     };
 
   }, []);
 
-  // ================= MAIN LAYOUT =================
+  // ======================================================
+  // ================= MAIN LAYOUT ========================
+  // ======================================================
 
   const mainLayoutClass =
+
     user && !isMobile
 
       ? isSidebarOpen
@@ -113,28 +218,46 @@ function App() {
 
       <div className="flex">
 
-        {/* SIDEBAR */}
+        {/* ====================================================== */}
+        {/* ================= SIDEBAR ============================ */}
+        {/* ====================================================== */}
 
         {user && (
 
           <Sidebar
-            isOpen={isSidebarOpen}
-            setIsOpen={setIsSidebarOpen}
+
+            isOpen={
+              isSidebarOpen
+            }
+
+            setIsOpen={
+              setIsSidebarOpen
+            }
           />
         )}
 
-        {/* MAIN */}
+        {/* ====================================================== */}
+        {/* ================= MAIN CONTENT ======================= */}
+        {/* ====================================================== */}
 
         <div
           className={`
+
             flex-1 min-h-screen
+
             bg-[#F9FAFB]
+
+            dark:bg-gray-900
+
             transition-all duration-300
+
             ${mainLayoutClass}
           `}
         >
 
-          {/* MOBILE TOPBAR */}
+          {/* ====================================================== */}
+          {/* ================= MOBILE TOPBAR ====================== */}
+          {/* ====================================================== */}
 
           {user && isMobile && (
 
@@ -152,9 +275,17 @@ function App() {
 
                 <button
                   onClick={() =>
-                    setIsSidebarOpen(true)
+                    setIsSidebarOpen(
+                      true
+                    )
                   }
-                  className="w-12 h-12 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition"
+                  className="
+                    w-12 h-12 rounded-xl
+                    hover:bg-gray-100
+                    dark:hover:bg-gray-800
+                    flex items-center justify-center
+                    transition
+                  "
                 >
 
                   <Menu
@@ -168,68 +299,152 @@ function App() {
             </div>
           )}
 
-          {/* ROUTES */}
+          {/* ====================================================== */}
+          {/* ================= ROUTES ============================= */}
+          {/* ====================================================== */}
 
           <Routes>
+
+            {/* ====================================================== */}
+            {/* ================= LOGIN ============================== */}
+            {/* ====================================================== */}
 
             <Route
               path="/"
               element={
                 user
-                  ? <Navigate to="/home" />
-                  : <Login />
+
+                  ? (
+                    <Navigate
+                      to="/home"
+                      replace
+                    />
+                  )
+
+                  : (
+                    <Login />
+                  )
               }
             />
+
+            {/* ====================================================== */}
+            {/* ================= SIGNUP ============================= */}
+            {/* ====================================================== */}
 
             <Route
               path="/signup"
               element={
                 user
-                  ? <Navigate to="/home" />
-                  : <Signup />
+
+                  ? (
+                    <Navigate
+                      to="/home"
+                      replace
+                    />
+                  )
+
+                  : (
+                    <Signup />
+                  )
               }
             />
+
+            {/* ====================================================== */}
+            {/* ================= HOME =============================== */}
+            {/* ====================================================== */}
 
             <Route
               path="/home"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute
+                  requiredPermission="home"
+                >
+
                   <Home />
+
                 </ProtectedRoute>
               }
             />
+
+            {/* ====================================================== */}
+            {/* ================= UPLOAD ============================= */}
+            {/* ====================================================== */}
 
             <Route
               path="/upload"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute
+                  requiredPermission="upload_profiles"
+                >
+
                   <UploadProfile />
+
                 </ProtectedRoute>
               }
             />
 
-            <Route
-              path="/insights"
-              element={
-                <ProtectedRoute>
-                  <Insights />
-                </ProtectedRoute>
-              }
-            />
+            {/* ====================================================== */}
+            {/* ================= TALENT ============================= */}
+            {/* ====================================================== */}
 
             <Route
               path="/talent"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute
+                  requiredPermission="talent_pool"
+                >
+
                   <TalentPool />
+
                 </ProtectedRoute>
               }
             />
 
+            {/* ====================================================== */}
+            {/* ================= INSIGHTS =========================== */}
+            {/* ====================================================== */}
+
+            <Route
+              path="/insights"
+              element={
+                <ProtectedRoute
+                  requiredPermission="insights"
+                >
+
+                  <Insights />
+
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ====================================================== */}
+            {/* ================= USER MANAGEMENT ==================== */}
+            {/* ====================================================== */}
+
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute
+                  requiredPermission="user_management"
+                >
+
+                  <UserManagement />
+
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ====================================================== */}
+            {/* ================= FALLBACK =========================== */}
+            {/* ====================================================== */}
+
             <Route
               path="*"
               element={
-                <Navigate to="/" />
+                <Navigate
+                  to="/"
+                  replace
+                />
               }
             />
 

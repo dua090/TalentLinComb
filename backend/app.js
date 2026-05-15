@@ -1,15 +1,101 @@
-const express = require("express");
-const cors = require("cors");
+const express =
+  require("express");
 
-const app = express();
-const analyticsRoutes = require("./routes/analyticsRoutes");
+const cors =
+  require("cors");
+
+const app =
+  express();
+
+// ======================================================
+// ================= ROUTES =============================
+// ======================================================
+
+const authRoutes =
+  require(
+    "./routes/authRoutes"
+  );
+
+const candidateRoutes =
+  require(
+    "./routes/candidateRoutes"
+  );
+
+const analyticsRoutes =
+  require(
+    "./routes/analyticsRoutes"
+  );
+
+const userRoutes =
+  require(
+    "./routes/userRoutes"
+  );
+
+const aiRoutes =
+  require(
+    "./routes/aiRoutes"
+  );
+
+// ======================================================
+// ================= MIDDLEWARE =========================
+// ======================================================
 
 app.use(cors());
+
 app.use(express.json());
 
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/candidates", require("./routes/candidateRoutes"));
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/search", require("./routes/candidateRoutes"));
+// ======================================================
+// ================= API ROUTES =========================
+// ======================================================
 
-module.exports = app;
+// AUTH
+
+app.use(
+
+  "/api/auth",
+
+  authRoutes
+);
+
+// CANDIDATES
+
+app.use(
+
+  "/api/candidates",
+
+  candidateRoutes
+);
+
+// ANALYTICS
+
+app.use(
+
+  "/api/analytics",
+
+  analyticsRoutes
+);
+
+// USERS
+
+app.use(
+
+  "/api/users",
+
+  userRoutes
+);
+
+// AI
+
+app.use(
+
+  "/api/ai",
+
+  aiRoutes
+);
+
+// ======================================================
+// ================= EXPORT =============================
+// ======================================================
+
+module.exports =
+  app;

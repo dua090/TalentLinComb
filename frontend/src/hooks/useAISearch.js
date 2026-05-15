@@ -6,129 +6,212 @@ import {
   smartSearch,
 } from "../services/searchService";
 
-const useAISearch = () => {
+// ======================================================
+// ================= AI SEARCH HOOK =====================
+// ======================================================
 
-  // ================= STATES =================
+const useAISearch =
+  () => {
 
-  const [query, setQuery] =
-    useState("");
+    // ======================================================
+    // ================= AUTH ===============================
+    // ======================================================
 
-  const [
-    searchedQuery,
-    setSearchedQuery,
-  ] = useState("");
+    const storedUser =
+      JSON.parse(
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [
-    showResults,
-    setShowResults,
-  ] = useState(false);
-
-  const [results, setResults] =
-    useState([]);
-
-  const [
-    parsedQuery,
-    setParsedQuery,
-  ] = useState(null);
-
-  // ================= SEARCH =================
-
-  const handleSearch = async (
-    customQuery
-  ) => {
-
-    const finalQuery =
-      typeof customQuery ===
-      "string"
-
-        ? customQuery
-
-        : query;
-
-    // ================= EMPTY CHECK =================
-
-    if (
-      !finalQuery?.trim()
-    ) {
-
-      return;
-    }
-
-    try {
-
-      setLoading(true);
-
-      setShowResults(true);
-
-      // ================= STORE SEARCHED QUERY =================
-
-      setSearchedQuery(
-        finalQuery
+        localStorage.getItem(
+          "user"
+        )
       );
 
-      const data =
-        await smartSearch(
-          finalQuery
+    const token =
+      storedUser?.token;
+
+    // ======================================================
+    // ================= STATES =============================
+    // ======================================================
+
+    const [
+
+      query,
+
+      setQuery,
+
+    ] = useState("");
+
+    const [
+
+      searchedQuery,
+
+      setSearchedQuery,
+
+    ] = useState("");
+
+    const [
+
+      loading,
+
+      setLoading,
+
+    ] = useState(false);
+
+    const [
+
+      showResults,
+
+      setShowResults,
+
+    ] = useState(false);
+
+    const [
+
+      results,
+
+      setResults,
+
+    ] = useState([]);
+
+    const [
+
+      parsedQuery,
+
+      setParsedQuery,
+
+    ] = useState(null);
+
+    // ======================================================
+    // ================= SEARCH =============================
+    // ======================================================
+
+    const handleSearch =
+      async (
+        customQuery
+      ) => {
+
+        const finalQuery =
+
+          typeof customQuery ===
+          "string"
+
+            ? customQuery
+
+            : query;
+
+        // ================= EMPTY CHECK =================
+
+        if (
+          !finalQuery?.trim()
+        ) {
+
+          return;
+        }
+
+        try {
+
+          setLoading(true);
+
+          setShowResults(
+            true
+          );
+
+          // ================= STORE QUERY =================
+
+          setSearchedQuery(
+            finalQuery
+          );
+
+          // ================= AI SEARCH =================
+
+          const data =
+            await smartSearch({
+
+              prompt:
+                finalQuery,
+
+              token,
+            });
+
+          // ================= SAVE RESULTS =================
+
+          setResults(
+
+            data.candidates ||
+
+            []
+          );
+
+          setParsedQuery(
+
+            data.parsed ||
+
+            null
+          );
+
+        } catch (err) {
+
+          console.error(
+
+            "AI SEARCH ERROR:",
+
+            err
+          );
+
+          setResults([]);
+
+          setParsedQuery(
+            null
+          );
+
+        } finally {
+
+          setLoading(
+            false
+          );
+        }
+      };
+
+    // ======================================================
+    // ================= QUICK SEARCH =======================
+    // ======================================================
+
+    const quickSearch =
+      (value) => {
+
+        setQuery(
+          value
         );
 
-      setResults(
-        data.candidates || []
-      );
+        handleSearch(
+          value
+        );
+      };
 
-      setParsedQuery(
-        data.parsed || null
-      );
+    // ======================================================
+    // ================= RETURN =============================
+    // ======================================================
 
-    } catch (err) {
+    return {
 
-      console.error(
-        "AI search failed:",
-        err
-      );
+      query,
 
-      setResults([]);
+      setQuery,
 
-      setParsedQuery(null);
+      searchedQuery,
 
-    } finally {
+      loading,
 
-      setLoading(false);
-    }
+      showResults,
+
+      results,
+
+      parsedQuery,
+
+      handleSearch,
+
+      quickSearch,
+    };
   };
 
-  // ================= QUICK SEARCH =================
-
-  const quickSearch = (
-    value
-  ) => {
-
-    setQuery(value);
-
-    handleSearch(value);
-  };
-
-  return {
-
-    query,
-    setQuery,
-
-    searchedQuery,
-
-    loading,
-
-    showResults,
-
-    results,
-
-    parsedQuery,
-
-    handleSearch,
-
-    quickSearch,
-  };
-};
-
-export default useAISearch;
+export default
+  useAISearch;

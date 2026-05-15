@@ -9,63 +9,145 @@ import {
 } from "react-router-dom";
 
 import {
+
   Home,
+
   Upload,
+
   Users,
+
   BarChart3,
+
   Sun,
+
   Moon,
+
   Menu,
+
   PanelLeftClose,
+
   LogOut,
+
   X,
+
+  ShieldCheck,
+
 } from "lucide-react";
 
-import { useAuth } from "../context/AuthContext";
+import {
+  useAuth,
+} from "../context/AuthContext";
 
-import { TalentLinkLogo } from "../components/TalentLinkLogo";
+import {
+  TalentLinkLogo,
+} from "../components/TalentLinkLogo";
+
+// ======================================================
+// ================= NAVIGATION =========================
+// ======================================================
 
 const navItems = [
+
   {
     label: "Home",
+
     path: "/home",
+
     icon: Home,
+
+    permission: "home",
   },
+
   {
     label: "Upload Profiles",
+
     path: "/upload",
+
     icon: Upload,
+
+    permission:
+      "upload_profiles",
   },
+
   {
     label: "Talent Pool",
+
     path: "/talent",
+
     icon: Users,
+
+    permission:
+      "talent_pool",
   },
+
   {
     label: "Insights",
+
     path: "/insights",
+
     icon: BarChart3,
+
+    permission:
+      "insights",
+  },
+
+  {
+    label: "User Management",
+
+    path: "/users",
+
+    icon: ShieldCheck,
+
+    permission:
+      "user_management",
   },
 ];
 
+// ======================================================
+// ================= SIDEBAR ============================
+// ======================================================
+
 export default function Sidebar({
+
   isOpen,
+
   setIsOpen,
 }) {
 
-  const { logout } =
-    useAuth();
+  // ======================================================
+  // ================= AUTH ===============================
+  // ======================================================
+
+  const {
+    logout,
+  } = useAuth();
 
   const location =
     useLocation();
 
-  const [user, setUser] =
-    useState(null);
+  // ======================================================
+  // ================= STATES =============================
+  // ======================================================
 
-  const [darkMode, setDarkMode] =
-    useState(false);
+  const [
 
-  // ================= USER & THEME =================
+    user,
+
+    setUser,
+
+  ] = useState(null);
+
+  const [
+
+    darkMode,
+
+    setDarkMode,
+
+  ] = useState(false);
+
+  // ======================================================
+  // ================= INITIALIZATION =====================
+  // ======================================================
 
   useEffect(() => {
 
@@ -73,6 +155,7 @@ export default function Sidebar({
 
       const storedUser =
         JSON.parse(
+
           localStorage.getItem(
             "user"
           )
@@ -81,6 +164,7 @@ export default function Sidebar({
       if (
         storedUser?.user
       ) {
+
         setUser(
           storedUser.user
         );
@@ -92,30 +176,40 @@ export default function Sidebar({
         );
 
       setDarkMode(
-        savedTheme === "dark"
+
+        savedTheme ===
+        "dark"
       );
 
     } catch (err) {
 
       console.error(
+
         "Sidebar initialization failed:",
+
         err
       );
     }
 
   }, []);
 
-  // ================= APPLY THEME =================
+  // ======================================================
+  // ================= APPLY THEME ========================
+  // ======================================================
 
   useEffect(() => {
 
     document.documentElement.classList.toggle(
+
       "dark",
+
       darkMode
     );
 
     localStorage.setItem(
+
       "theme",
+
       darkMode
         ? "dark"
         : "light"
@@ -123,38 +217,63 @@ export default function Sidebar({
 
   }, [darkMode]);
 
-  // ================= BODY SCROLL =================
+  // ======================================================
+  // ================= BODY SCROLL ========================
+  // ======================================================
 
   useEffect(() => {
 
     const isMobile =
+
       window.innerWidth < 768;
 
     document.body.style.overflow =
+
       isOpen && isMobile
+
         ? "hidden"
+
         : "auto";
 
     return () => {
+
       document.body.style.overflow =
         "auto";
     };
 
   }, [isOpen]);
 
-  // ================= AUTO CLOSE MOBILE =================
+  // ======================================================
+  // ================= AUTO CLOSE MOBILE ==================
+  // ======================================================
 
   useEffect(() => {
 
     if (
       window.innerWidth < 768
     ) {
+
       setIsOpen(false);
     }
 
   }, [location.pathname]);
 
-  // ================= HELPERS =================
+  // ======================================================
+  // ================= PERMISSION FILTER ==================
+  // ======================================================
+
+  const filteredNavItems =
+    navItems.filter(
+      (item) =>
+
+        user?.permissions?.includes(
+          item.permission
+        )
+    );
+
+  // ======================================================
+  // ================= HELPERS ============================
+  // ======================================================
 
   const handleMobileClose =
     () => {
@@ -162,6 +281,7 @@ export default function Sidebar({
       if (
         window.innerWidth < 768
       ) {
+
         setIsOpen(false);
       }
     };
@@ -173,16 +293,18 @@ export default function Sidebar({
 
       ${
         isOpen
+
           ? "gap-3 px-4"
+
           : "justify-center"
       }
 
       py-3 rounded-2xl cursor-pointer
+
       transition-all duration-300
 
       ${
-        location.pathname ===
-        path
+        location.pathname === path
 
           ? "bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 font-semibold"
 
@@ -190,7 +312,9 @@ export default function Sidebar({
       }
     `;
 
-  // ================= TOOLTIP =================
+  // ======================================================
+  // ================= TOOLTIP ============================
+  // ======================================================
 
   const Tooltip = ({
     text,
@@ -209,14 +333,18 @@ export default function Sidebar({
       shadow-lg z-50
     "
     >
+
       {text}
+
     </div>
   );
 
   return (
 
     <>
-      {/* MOBILE OVERLAY */}
+      {/* ====================================================== */}
+      {/* ================= MOBILE OVERLAY ===================== */}
+      {/* ====================================================== */}
 
       {isOpen && (
 
@@ -228,7 +356,9 @@ export default function Sidebar({
         />
       )}
 
-      {/* SIDEBAR */}
+      {/* ====================================================== */}
+      {/* ================= SIDEBAR ============================ */}
+      {/* ====================================================== */}
 
       <div
         className={`
@@ -241,36 +371,42 @@ export default function Sidebar({
 
         ${
           isOpen
+
             ? "translate-x-0"
+
             : "-translate-x-full md:translate-x-0"
         }
 
         ${
           isOpen
+
             ? "w-64"
+
             : "md:w-20 w-64"
         }
       `}
       >
 
-        {/* TOP SECTION */}
+        {/* ====================================================== */}
+        {/* ================= TOP SECTION ======================== */}
+        {/* ====================================================== */}
 
         <div>
 
-          {/* HEADER */}
+          {/* ================= HEADER ================= */}
 
           <div
             className={`
             h-24 border-b border-gray-100 dark:border-gray-800 flex items-center
             ${
               isOpen
+
                 ? "justify-between px-5"
+
                 : "justify-center"
             }
           `}
           >
-
-            {/* LOGO */}
 
             <Link
               to="/home"
@@ -296,8 +432,6 @@ export default function Sidebar({
               )}
             </Link>
 
-            {/* CONTROLS */}
-
             {isOpen ? (
 
               <>
@@ -307,7 +441,9 @@ export default function Sidebar({
                   }
                   className="md:hidden w-12 h-12 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
                 >
+
                   <X className="text-gray-700 dark:text-gray-300" />
+
                 </button>
 
                 <button
@@ -316,7 +452,9 @@ export default function Sidebar({
                   }
                   className="hidden md:flex w-10 h-10 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 items-center justify-center"
                 >
+
                   <PanelLeftClose className="text-gray-600 dark:text-gray-300" />
+
                 </button>
               </>
 
@@ -336,18 +474,20 @@ export default function Sidebar({
                 items-center justify-center
               "
               >
+
                 <Menu className="text-gray-600 dark:text-gray-300" />
+
               </button>
             )}
           </div>
 
-          {/* NAVIGATION */}
+          {/* ================= NAVIGATION ================= */}
 
           <div className="px-3 py-6">
 
             <ul className="space-y-2">
 
-              {navItems.map(
+              {filteredNavItems.map(
                 ({
                   label,
                   path,
@@ -390,11 +530,13 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* BOTTOM SECTION */}
+        {/* ====================================================== */}
+        {/* ================= BOTTOM SECTION ===================== */}
+        {/* ====================================================== */}
 
         <div className="p-4 border-t border-gray-100 dark:border-gray-800">
 
-          {/* THEME TOGGLE */}
+          {/* ================= THEME ================= */}
 
           <button
             onClick={() =>
@@ -406,7 +548,9 @@ export default function Sidebar({
             mb-4 flex items-center
             ${
               isOpen
+
                 ? "gap-3 w-full px-4"
+
                 : "justify-center"
             }
             py-3 rounded-2xl
@@ -424,21 +568,25 @@ export default function Sidebar({
               <span className="text-sm font-medium">
 
                 {darkMode
+
                   ? "Light Mode"
+
                   : "Dark Mode"}
 
               </span>
             )}
           </button>
 
-          {/* USER */}
+          {/* ================= USER ================= */}
 
           <div
             className={`
             flex items-center
             ${
               isOpen
+
                 ? "gap-3 px-2"
+
                 : "justify-center"
             }
             mb-5
@@ -456,17 +604,21 @@ export default function Sidebar({
               <div>
 
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
+
                   {user?.name || "User"}
+
                 </p>
 
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {user?.email || "user@email.com"}
+
+                  {user?.role || "User"}
+
                 </p>
               </div>
             )}
           </div>
 
-          {/* LOGOUT */}
+          {/* ================= LOGOUT ================= */}
 
           <button
             onClick={logout}
@@ -474,7 +626,9 @@ export default function Sidebar({
             w-full flex items-center
             ${
               isOpen
+
                 ? "gap-3 px-4"
+
                 : "justify-center"
             }
             py-3 rounded-2xl

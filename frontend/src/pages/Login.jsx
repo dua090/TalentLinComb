@@ -67,10 +67,14 @@ export default function Login() {
 
     try {
 
-      await login(
+      await login({
+
+      email:
         form.email,
-        form.password
-      );
+
+      password:
+        form.password,
+    });
 
       navigate("/home");
 

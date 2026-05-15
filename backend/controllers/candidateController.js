@@ -1,97 +1,144 @@
-const fs = require("fs");
-const pdfParse = require("pdf-parse");
-const mammoth = require("mammoth");
+const fs =
+  require("fs");
 
-const Candidate = require("../models/Candidate");
+const pdfParse =
+  require("pdf-parse");
+
+const mammoth =
+  require("mammoth");
+
+const Candidate =
+  require(
+    "../models/Candidate"
+  );
 
 const {
   parseResumeWithAI,
-} = require("../services/aiService");
+} = require(
+  "../services/aiService"
+);
 
 const {
   generateEmbedding,
-} = require("../services/embeddingService");
+} = require(
+  "../services/embeddingService"
+);
 
 // ================= EXTRACT TEXT =================
 
-const extractText = async (
-  filePath,
-  mimetype
-) => {
+const extractText =
+  async (
+    filePath,
+    mimetype
+  ) => {
 
-  if (
-    mimetype ===
-    "application/pdf"
-  ) {
+    // ================= PDF =================
 
-    const dataBuffer =
-      fs.readFileSync(
-        filePath
-      );
+    if (
+      mimetype ===
+      "application/pdf"
+    ) {
 
-    const data =
-      await pdfParse(
-        dataBuffer
-      );
+      const dataBuffer =
+        fs.readFileSync(
+          filePath
+        );
 
-    return data.text;
-  }
+      const data =
+        await pdfParse(
+          dataBuffer
+        );
 
-  if (
-    mimetype ===
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  ) {
+      return data.text;
+    }
 
-    const result =
-      await mammoth.extractRawText({
-        path: filePath,
-      });
+    // ================= DOCX =================
 
-    return result.value;
-  }
+    if (
+      mimetype ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
 
-  return "";
-};
+      const result =
+        await mammoth.extractRawText({
+
+          path:
+            filePath,
+        });
+
+      return result.value;
+    }
+
+    return "";
+  };
 
 // ================= FALLBACK PARSER =================
 
-const fallbackParser = (
-  text
-) => {
+const fallbackParser =
+  (text) => {
 
-  const email =
-    text.match(
-      /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
-    );
+    const email =
+      text.match(
+        /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
+      );
 
-  const phone =
-    text.match(/\b\d{10}\b/);
+    const phone =
+      text.match(
+        /\b\d{10}\b/
+      );
 
-  return {
+    return {
 
-    name:
-      text.split("\n")[0] ||
-      "Unknown",
+      name:
+        text.split("\n")[0] ||
+        "Unknown",
 
-    email:
-      email
-        ? email[0]
-        : "Not found",
+      email:
+        email
+          ? email[0]
+          : "Not found",
 
-    phone:
-      phone
-        ? phone[0]
-        : "Not found",
+      phone:
+        phone
+          ? phone[0]
+          : "Not found",
 
-    skills: [],
+      skills: [],
 
-    experience: 0,
+      experience: 0,
 
-    education: [],
+      education: [],
 
-    projects: [],
+      projects: [],
+    };
   };
-};
+
+// ================= SEARCHABLE TEXT =================
+
+const buildSearchableText =
+  ({
+    name,
+    skills,
+    projects,
+    education,
+    experience,
+  }) => {
+
+    return `
+
+${name}
+
+${skills.join(" ")}
+
+${projects.join(" ")}
+
+${education.join(" ")}
+
+${experience}
+years experience
+
+`;
+  };
 
 // ================= UPLOAD RESUME =================
 
@@ -100,18 +147,22 @@ exports.uploadResume =
 
     try {
 
-      // FILE CHECK
+      // ================= FILE VALIDATION =================
 
       if (!req.file) {
 
         return res
           .status(400)
           .json({
-            msg: "No file uploaded",
+
+            success: false,
+
+            msg:
+              "No file uploaded",
           });
       }
 
-      // ONLY PDF
+      // ================= FILE TYPE =================
 
       if (
         req.file.mimetype !==
@@ -121,11 +172,15 @@ exports.uploadResume =
         return res
           .status(400)
           .json({
-            msg: "Only PDF files are allowed",
+
+            success: false,
+
+            msg:
+              "Only PDF files are allowed",
           });
       }
 
-      // FILE SIZE LIMIT
+      // ================= FILE SIZE =================
 
       const MAX_FILE_SIZE =
         5 * 1024 * 1024;
@@ -138,18 +193,24 @@ exports.uploadResume =
         return res
           .status(400)
           .json({
-            msg: "File size should not exceed 5MB",
+
+            success: false,
+
+            msg:
+              "File size should not exceed 5MB",
           });
       }
 
       const filePath =
         req.file.path;
 
-      // EXTRACT TEXT
+      // ================= EXTRACT TEXT =================
 
       const text =
         await extractText(
+
           filePath,
+
           req.file.mimetype
         );
 
@@ -158,11 +219,15 @@ exports.uploadResume =
         return res
           .status(400)
           .json({
-            msg: "Could not extract text",
+
+            success: false,
+
+            msg:
+              "Could not extract text",
           });
       }
 
-      // AI PARSING
+      // ================= AI PARSING =================
 
       let parsedData =
         null;
@@ -177,11 +242,11 @@ exports.uploadResume =
       } catch (err) {
 
         console.log(
-          "AI parsing failed, using fallback parser"
+          "AI parsing failed. Using fallback parser."
         );
       }
 
-      // FALLBACK
+      // ================= FALLBACK =================
 
       if (!parsedData) {
 
@@ -191,7 +256,7 @@ exports.uploadResume =
           );
       }
 
-      // SAFE DEFAULTS
+      // ================= SAFE DEFAULTS =================
 
       parsedData.name =
         parsedData.name ||
@@ -223,28 +288,26 @@ exports.uploadResume =
 
       // ================= SEARCHABLE TEXT =================
 
-      const searchableText = `
+      const searchableText =
+        buildSearchableText({
 
-${parsedData.name}
+          name:
+            parsedData.name,
 
-${parsedData.skills.join(
-  " "
-)}
+          skills:
+            parsedData.skills,
 
-${parsedData.projects.join(
-  " "
-)}
+          projects:
+            parsedData.projects,
 
-${parsedData.education.join(
-  " "
-)}
+          education:
+            parsedData.education,
 
-${parsedData.experience}
-years experience
+          experience:
+            parsedData.experience,
+        });
 
-`;
-
-      // ================= GENERATE EMBEDDING =================
+      // ================= EMBEDDING =================
 
       const embedding =
         await generateEmbedding(
@@ -282,10 +345,14 @@ years experience
 
           embedding,
 
-          source: "ai",
+          source:
+            "ai",
+
+          organizationId:
+            req.user.organizationId,
         });
-        
-      // RESPONSE
+
+      // ================= RESPONSE =================
 
       res.status(201).json({
 
@@ -308,7 +375,8 @@ years experience
 
         success: false,
 
-        msg: "Server error",
+        msg:
+          "Server error",
       });
     }
   };
@@ -335,23 +403,31 @@ exports.addCandidateManual =
         education,
 
         projects,
-
       } = req.body;
 
-      // VALIDATION
+      // ================= VALIDATION =================
 
       if (
+
         !name ||
+
         !email ||
+
         !phone ||
+
         !skills ||
+
         experience ===
           undefined
+
       ) {
 
         return res
           .status(400)
           .json({
+
+            success: false,
+
             msg:
               "name, email, phone, skills, experience are required",
           });
@@ -359,28 +435,21 @@ exports.addCandidateManual =
 
       // ================= SEARCHABLE TEXT =================
 
-      const searchableText = `
+      const searchableText =
+        buildSearchableText({
 
-${name}
+          name,
 
-${skills.join(" ")}
+          skills,
 
-${
-  projects?.join(
-    " "
-  ) || ""
-}
+          projects:
+            projects || [],
 
-${
-  education?.join(
-    " "
-  ) || ""
-}
+          education:
+            education || [],
 
-${experience}
-years experience
-
-`;
+          experience,
+        });
 
       // ================= EMBEDDING =================
 
@@ -405,8 +474,7 @@ years experience
           experience,
 
           education:
-            education ||
-            [],
+            education || [],
 
           projects:
             projects || [],
@@ -415,9 +483,16 @@ years experience
 
           source:
             "manual",
+
+          organizationId:
+            req.user.organizationId,
         });
 
+      // ================= RESPONSE =================
+
       res.status(201).json({
+
+        success: true,
 
         msg:
           "Candidate added manually",
@@ -428,17 +503,21 @@ years experience
     } catch (error) {
 
       console.error(
+        "MANUAL ADD ERROR:",
         error
       );
 
       res.status(500).json({
 
-        msg: "Server error",
+        success: false,
+
+        msg:
+          "Server error",
       });
     }
   };
 
-// ================= BASIC SEARCH =================
+// ================= SEARCH CANDIDATES =================
 
 exports.searchCandidates =
   async (req, res) => {
@@ -448,12 +527,20 @@ exports.searchCandidates =
       const { skill } =
         req.query;
 
-      let query = {};
+      let query = {
+
+        organizationId:
+          req.user.organizationId,
+      };
+
+      // ================= SKILL FILTER =================
 
       if (skill) {
 
         query.skills = {
+
           $regex: skill,
+
           $options: "i",
         };
       }
@@ -461,16 +548,28 @@ exports.searchCandidates =
       const candidates =
         await Candidate.find(
           query
-        );
+        ).sort({
 
-      res.json(
+          createdAt: -1,
+        });
+
+      res.status(200).json(
         candidates
       );
 
     } catch (err) {
 
+      console.error(
+        "SEARCH ERROR:",
+        err
+      );
+
       res.status(500).json({
-        msg: "Search error",
+
+        success: false,
+
+        msg:
+          "Search failed",
       });
     }
   };
@@ -483,13 +582,20 @@ exports.getCandidates =
     try {
 
       const candidates =
-        await Candidate.find().sort({
+        await Candidate.find({
+
+          organizationId:
+            req.user.organizationId,
+        }).sort({
+
           createdAt: -1,
         });
 
       res
         .status(200)
-        .json(candidates);
+        .json(
+          candidates
+        );
 
     } catch (err) {
 
@@ -500,38 +606,56 @@ exports.getCandidates =
 
       res.status(500).json({
 
+        success: false,
+
         message:
           "Failed to fetch candidates",
       });
     }
   };
 
-  exports.toggleBookmark =
+// ================= TOGGLE BOOKMARK =================
+
+exports.toggleBookmark =
   async (req, res) => {
 
     try {
 
       const candidate =
-        await Candidate.findById(
-          req.params.id
-        );
+        await Candidate.findOne({
+
+          _id:
+            req.params.id,
+
+          organizationId:
+            req.user.organizationId,
+        });
+
+      // ================= NOT FOUND =================
 
       if (!candidate) {
 
         return res
           .status(404)
           .json({
+
             success: false,
-            msg: "Candidate not found",
+
+            msg:
+              "Candidate not found",
           });
       }
+
+      // ================= TOGGLE =================
 
       candidate.isBookmarked =
         !candidate.isBookmarked;
 
       await candidate.save();
 
-      res.json({
+      // ================= RESPONSE =================
+
+      res.status(200).json({
 
         success: true,
 
@@ -552,7 +676,8 @@ exports.getCandidates =
 
         success: false,
 
-        msg: "Bookmark update failed",
+        msg:
+          "Bookmark update failed",
       });
     }
   };

@@ -1,15 +1,56 @@
-const router = require("express").Router();
+const router =
+  require("express").Router();
 
-const auth = require("../middleware/authMiddleware");
+// ======================================================
+// ================= MIDDLEWARE =========================
+// ======================================================
+
+const auth =
+  require(
+    "../middleware/authMiddleware"
+  );
+
+const allowPermissions =
+  require(
+    "../middleware/permissionMiddleware"
+  );
+
+// ======================================================
+// ================= CONTROLLERS ========================
+// ======================================================
 
 const {
+
   getDashboardAnalytics,
-} = require("../controllers/analyticsController");
+
+} = require(
+  "../controllers/analyticsController"
+);
+
+// ======================================================
+// ================= ANALYTICS ROUTES ===================
+// ======================================================
+
+// ======================================================
+// ================= DASHBOARD ANALYTICS ================
+// ======================================================
 
 router.get(
+
   "/dashboard",
+
   auth,
+
+  allowPermissions(
+    "insights"
+  ),
+
   getDashboardAnalytics
 );
 
-module.exports = router;
+// ======================================================
+// ================= EXPORT =============================
+// ======================================================
+
+module.exports =
+  router;

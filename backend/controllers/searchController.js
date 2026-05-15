@@ -1,5 +1,7 @@
 const Candidate =
-  require("../models/Candidate");
+  require(
+    "../models/Candidate"
+  );
 
 const {
   GoogleGenerativeAI,
@@ -19,11 +21,64 @@ const {
   "../utils/rankingEngine"
 );
 
+// ================= GEMINI =================
+
 const genAI =
   new GoogleGenerativeAI(
+
     process.env
       .GEMINI_API_KEY
   );
+
+// ================= EXTRACT JSON =================
+
+const extractJSON =
+  (text) => {
+
+    const match =
+      text.match(
+        /\{[\s\S]*\}/
+      );
+
+    if (!match) {
+
+      throw new Error(
+        "Invalid AI response"
+      );
+    }
+
+    return JSON.parse(
+      match[0]
+    );
+  };
+
+// ================= BUILD SEMANTIC QUERY =================
+
+const buildSemanticQuery =
+  ({
+    prompt,
+    skills,
+    experience,
+  }) => {
+
+    return `
+
+${prompt}
+
+${skills?.join(
+  " "
+)}
+
+${
+  experience || ""
+}
+
+years experience
+
+`;
+  };
+
+// ================= SMART SEARCH =================
 
 exports.smartSearch =
   async (req, res) => {
@@ -41,33 +96,43 @@ exports.smartSearch =
           .status(400)
           .json({
 
+            success: false,
+
             msg:
               "Prompt is required",
           });
       }
 
-      // ================= GEMINI QUERY PARSING =================
+      // ================= GEMINI MODEL =================
 
       const model =
-        genAI.getGenerativeModel(
-          {
-            model:
-              "gemini-3-flash-preview",
-          }
-        );
+        genAI.getGenerativeModel({
+
+          model:
+            "gemini-3-flash-preview",
+        });
+
+      // ================= AI QUERY PARSING =================
 
       const result =
         await model.generateContent(`
+
 You are an AI recruiter assistant.
 
 Extract structured data from the recruiter query below.
 
-Rules:
+RULES:
 - Always return valid JSON only
 - Skills must be array
 - Experience must be number or null
 - Extract technical skills only
-- Remove unnecessary words like developer, engineer, expert, candidate, etc.
+- Remove generic words:
+  developer,
+  engineer,
+  expert,
+  candidate,
+  resource,
+  profile
 
 Recruiter Query:
 "${prompt}"
@@ -77,26 +142,19 @@ Return Format:
   "skills": ["React"],
   "experience": 3
 }
+
 `);
 
-      let text =
+      // ================= RAW RESPONSE =================
+
+      const rawText =
         result.response.text();
 
-      const match =
-        text.match(
-          /\{[\s\S]*\}/
-        );
-
-      if (!match) {
-
-        throw new Error(
-          "Invalid AI response"
-        );
-      }
+      // ================= PARSED JSON =================
 
       const parsed =
-        JSON.parse(
-          match[0]
+        extractJSON(
+          rawText
         );
 
       console.log(
@@ -106,26 +164,23 @@ Return Format:
 
       // ================= SEMANTIC QUERY =================
 
-      const semanticQuery = `
+      const semanticQuery =
+        buildSemanticQuery({
 
-${prompt}
+          prompt,
 
-${parsed.skills?.join(
-  " "
-)}
+          skills:
+            parsed.skills,
 
-${
-  parsed.experience ||
-  ""
-}
-
-years experience
-
-`;
+          experience:
+            parsed.experience,
+        });
 
       console.log(
-        "Generating embedding..."
+        "Generating query embedding..."
       );
+
+      // ================= QUERY EMBEDDING =================
 
       const queryEmbedding =
         await generateEmbedding(
@@ -133,17 +188,24 @@ years experience
         );
 
       console.log(
-        "Embedding generated successfully"
+        "Query embedding generated"
       );
 
-      // ================= FETCH ALL CANDIDATES =================
+      // ================= MULTI-TENANT CANDIDATES =================
 
       const candidates =
-        await Candidate.find(
-          {}
-        );
+        await Candidate.find({
 
-      // ================= AI RANKING ENGINE =================
+          organizationId:
+            req.user.organizationId,
+        });
+
+      console.log(
+
+        `Fetched ${candidates.length} candidates`
+      );
+
+      // ================= AI RANKING =================
 
       const scoredCandidates =
         candidates.map(
@@ -161,18 +223,6 @@ years experience
 
                 queryEmbedding,
               });
-
-            console.log({
-
-              candidate:
-                candidate.name,
-
-              semanticScore:
-                ranking.semanticScore,
-
-              matchPercentage:
-                ranking.matchPercentage,
-            });
 
             return {
 
@@ -207,17 +257,18 @@ years experience
           }
         );
 
-      // ================= SORT BEST → WORST =================
+      // ================= SORT =================
 
       scoredCandidates.sort(
         (a, b) =>
+
           b.matchPercentage -
           a.matchPercentage
       );
 
       // ================= RESPONSE =================
 
-      res.json({
+      res.status(200).json({
 
         success: true,
 
@@ -239,8 +290,8 @@ years experience
     } catch (err) {
 
       console.error(
-        "❌ SEARCH ERROR:",
-        err.message
+        "SMART SEARCH ERROR:",
+        err
       );
 
       res.status(500).json({

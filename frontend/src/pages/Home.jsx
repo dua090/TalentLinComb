@@ -16,14 +16,35 @@ import CandidateRecommendationModal from "../components/home/CandidateRecommenda
 
 import useAISearch from "../hooks/useAISearch";
 
+// ================= HOME =================
+
 const Home = () => {
 
-  // ================= AI SEARCH =================
+  // ======================================================
+  // ================= AUTH USER ==========================
+  // ======================================================
+
+  const storedUser =
+    JSON.parse(
+
+      localStorage.getItem(
+        "user"
+      )
+    );
+
+  const token =
+    storedUser?.token;
+
+  // ======================================================
+  // ================= AI SEARCH ==========================
+  // ======================================================
 
   const {
 
     query,
+
     setQuery,
+
     searchedQuery,
 
     loading,
@@ -40,18 +61,25 @@ const Home = () => {
 
   } = useAISearch();
 
-  // ================= STATES =================
+  // ======================================================
+  // ================= STATES =============================
+  // ======================================================
 
   const [
+
     selectedCandidate,
+
     setSelectedCandidate,
+
   ] = useState(null);
 
   return (
 
     <div className="min-h-screen bg-[#F9FAFB] dark:bg-gray-900 px-4 py-6 sm:px-6 lg:px-8">
 
-      {/* ================= WELCOME BANNER ================= */}
+      {/* ====================================================== */}
+      {/* ================= WELCOME BANNER ===================== */}
+      {/* ====================================================== */}
 
       <div className="mb-8">
 
@@ -59,19 +87,25 @@ const Home = () => {
 
       </div>
 
-      {/* ================= QUICK ACTIONS ================= */}
+      {/* ====================================================== */}
+      {/* ================= QUICK ACTIONS ====================== */}
+      {/* ====================================================== */}
 
-      {/* <div className="mb-10">
+      {/*
+      <div className="mb-10">
 
         <QuickActions />
 
-      </div> */}
+      </div>
+      */}
 
-      {/* ================= AI SEARCH ================= */}
+      {/* ====================================================== */}
+      {/* ================= AI SEARCH ========================== */}
+      {/* ====================================================== */}
 
       <div className="mb-10">
 
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
 
         <div className="mb-5">
 
@@ -88,35 +122,51 @@ const Home = () => {
           </p>
         </div>
 
-        {/* SEARCH BAR */}
+        {/* ================= SEARCH BAR ================= */}
 
         <AISearchBar
+
           query={query}
+
           setQuery={setQuery}
+
           handleSearch={handleSearch}
+
           quickSearch={quickSearch}
+
           loading={loading}
         />
       </div>
 
-      {/* ================= SEARCH RESULTS ================= */}
+      {/* ====================================================== */}
+      {/* ================= SEARCH RESULTS ===================== */}
+      {/* ====================================================== */}
 
       {showResults && (
 
         <div className="mb-10">
 
           <SearchResults
+
             loading={loading}
+
             results={results}
+
             parsedQuery={parsedQuery}
+
             query={searchedQuery}
-            setSelectedCandidate={setSelectedCandidate}
+
+            setSelectedCandidate={
+              setSelectedCandidate
+            }
           />
 
         </div>
       )}
 
-      {/* ================= RECENT TALENT ================= */}
+      {/* ====================================================== */}
+      {/* ================= RECENT TALENT ====================== */}
+      {/* ====================================================== */}
 
       <div className="mb-10">
 
@@ -124,12 +174,25 @@ const Home = () => {
 
       </div>
 
-      {/* ================= MODAL ================= */}
+      {/* ====================================================== */}
+      {/* ================= AI MODAL =========================== */}
+      {/* ====================================================== */}
 
       <CandidateRecommendationModal
-        selectedCandidate={selectedCandidate}
-        setSelectedCandidate={setSelectedCandidate}
-        parsedQuery={parsedQuery}
+
+        selectedCandidate={
+          selectedCandidate
+        }
+
+        setSelectedCandidate={
+          setSelectedCandidate
+        }
+
+        parsedQuery={
+          parsedQuery
+        }
+
+        token={token}
       />
     </div>
   );

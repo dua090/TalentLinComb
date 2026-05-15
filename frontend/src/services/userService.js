@@ -1,23 +1,33 @@
 const API_BASE_URL =
+  `${import.meta.env.VITE_API_URL}/api/users`;
 
-  `${import.meta.env.VITE_API_URL}/api/candidates`;
+// ======================================================
+// ================= HEADERS ============================
+// ======================================================
 
-// ================= GET AUTH HEADERS =================
-
-const getAuthHeaders =
+const getHeaders =
   (token) => ({
+
+    "Content-Type":
+      "application/json",
 
     Authorization:
       `Bearer ${token}`,
   });
 
-// ================= HANDLE RESPONSE =================
+// ======================================================
+// ================= RESPONSE HANDLER ===================
+// ======================================================
 
 const handleResponse =
   async (response) => {
 
     const data =
       await response.json();
+
+    // ======================================================
+    // ================= ERROR ==============================
+    // ======================================================
 
     if (!response.ok) {
 
@@ -35,38 +45,22 @@ const handleResponse =
   };
 
 // ======================================================
-// ================= UPLOAD RESUME ======================
+// ================= GET USERS ==========================
 // ======================================================
 
-export const uploadResume =
-  async ({
-    file,
-    token,
-  }) => {
-
-    const formData =
-      new FormData();
-
-    formData.append(
-      "resume",
-      file
-    );
+export const getUsers =
+  async (token) => {
 
     const response =
       await fetch(
 
-        `${API_BASE_URL}/upload`,
+        API_BASE_URL,
 
         {
-          method: "POST",
-
           headers:
-            getAuthHeaders(
+            getHeaders(
               token
             ),
-
-          body:
-            formData,
         }
       );
 
@@ -76,10 +70,10 @@ export const uploadResume =
   };
 
 // ======================================================
-// ================= MANUAL CANDIDATE ===================
+// ================= CREATE USER ========================
 // ======================================================
 
-export const createManualCandidate =
+export const createUser =
   async ({
     payload,
     token,
@@ -88,20 +82,15 @@ export const createManualCandidate =
     const response =
       await fetch(
 
-        `${API_BASE_URL}/manual`,
+        API_BASE_URL,
 
         {
           method: "POST",
 
-          headers: {
-
-            "Content-Type":
-              "application/json",
-
-            ...getAuthHeaders(
+          headers:
+            getHeaders(
               token
             ),
-          },
 
           body:
             JSON.stringify(
@@ -116,89 +105,98 @@ export const createManualCandidate =
   };
 
 // ======================================================
-// ================= GET CANDIDATES =====================
+// ================= UPDATE USER ========================
 // ======================================================
 
-export const getCandidates =
-  async (token) => {
-
-    const response =
-      await fetch(
-
-        API_BASE_URL,
-
-        {
-          method: "GET",
-
-          headers:
-            getAuthHeaders(
-              token
-            ),
-        }
-      );
-
-    return handleResponse(
-      response
-    );
-  };
-
-// ======================================================
-// ================= SEARCH CANDIDATES ==================
-// ======================================================
-
-export const searchCandidates =
+export const updateUser =
   async ({
-    skill,
-    token,
-  }) => {
 
-    const query =
-      skill
-        ? `?skill=${encodeURIComponent(
-            skill
-          )}`
-        : "";
+    userId,
 
-    const response =
-      await fetch(
+    payload,
 
-        `${API_BASE_URL}/search${query}`,
-
-        {
-          method: "GET",
-
-          headers:
-            getAuthHeaders(
-              token
-            ),
-        }
-      );
-
-    return handleResponse(
-      response
-    );
-  };
-
-// ======================================================
-// ================= TOGGLE BOOKMARK ====================
-// ======================================================
-
-export const toggleBookmark =
-  async ({
-    candidateId,
     token,
   }) => {
 
     const response =
       await fetch(
 
-        `${API_BASE_URL}/${candidateId}/bookmark`,
+        `${API_BASE_URL}/${userId}/role`,
 
         {
           method: "PATCH",
 
           headers:
-            getAuthHeaders(
+            getHeaders(
+              token
+            ),
+
+          body:
+            JSON.stringify(
+              payload
+            ),
+        }
+      );
+
+    return handleResponse(
+      response
+    );
+  };
+
+// ======================================================
+// ================= TOGGLE STATUS ======================
+// ======================================================
+
+export const toggleUserStatus =
+  async ({
+
+    userId,
+
+    token,
+  }) => {
+
+    const response =
+      await fetch(
+
+        `${API_BASE_URL}/${userId}/status`,
+
+        {
+          method: "PATCH",
+
+          headers:
+            getHeaders(
+              token
+            ),
+        }
+      );
+
+    return handleResponse(
+      response
+    );
+  };
+
+// ======================================================
+// ================= DELETE USER ========================
+// ======================================================
+
+export const deleteUser =
+  async ({
+
+    userId,
+
+    token,
+  }) => {
+
+    const response =
+      await fetch(
+
+        `${API_BASE_URL}/${userId}`,
+
+        {
+          method: "DELETE",
+
+          headers:
+            getHeaders(
               token
             ),
         }
